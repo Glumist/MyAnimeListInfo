@@ -336,7 +336,7 @@ namespace MyAnimeListInfo
 
         private const string xmlSearchAddress = "https://myanimelist.net/api/anime/search.xml?q=";
 
-        public static List<AnimeRecord> SearchForAnime(AnimeRecordCollection animeList, string text, string login, string password)
+        public static List<AnimeRecord> SearchForAnime(string text, string login, string password)
         {
             string address = xmlSearchAddress + text.Replace(" ", "+");
 
@@ -360,7 +360,7 @@ namespace MyAnimeListInfo
                                 {
                                     case "id":
                                         int id = int.Parse(GetInnerText(attributeNode));
-                                        AnimeRecord havingRecord = animeList.Get(id);
+                                        AnimeRecord havingRecord = AnimeRecordCollection.Get(id);
                                         if (havingRecord != null)
                                         {
                                             haveRecord = true;
@@ -496,7 +496,7 @@ namespace MyAnimeListInfo
         private const string relatedAnimeClass = "anime_detail_related_anime";
         public const string AnimeInfoAddress = "https://myanimelist.net/anime/";
 
-        public static List<AnimeNews> GetAnimeInfo(AnimeRecord record, AnimeRecordCollection currentAnimeList)
+        public static List<AnimeNews> GetAnimeInfo(AnimeRecord record)
         {
             List<AnimeNews> news = new List<AnimeNews>();
             string address = AnimeInfoAddress + record.Id;
@@ -558,7 +558,7 @@ namespace MyAnimeListInfo
                             if (relatedTrNode == null)
                                 continue;
 
-                            List<RelatedAnime> relatedTitles = GetRelatedAnime(relatedTrNode, currentAnimeList);
+                            List<RelatedAnime> relatedTitles = GetRelatedAnime(relatedTrNode);
                             foreach (RelatedAnime relatedTitle in relatedTitles)
                                 if (!record.RelatedAnime.Exists(at => at.Id == relatedTitle.Id))
                                     news.Add(new AnimeNews(record, "Related Anime", relatedTitle.ToString()));
@@ -570,7 +570,7 @@ namespace MyAnimeListInfo
             string loadedAddress = GetMetaProperty(doc.DocumentNode, urlPropertyValue);
             if (loadedAddress != null)
             {
-                List<RecommendedAnime> recommendedTitles = GetRecommendedAnime(loadedAddress + recommendationsAddition, currentAnimeList);
+                List<RecommendedAnime> recommendedTitles = GetRecommendedAnime(loadedAddress + recommendationsAddition);
                 /*foreach (RecommendedAnime recommendedTitle in recommendedTitles)
                     if (!record.RecommendedAnime.Exists(at => at.Id == recommendedTitle.Id))
                         news.Add(new AnimeNews(record, "Recommended Anime", recommendedTitle.ToString()));*/
@@ -740,7 +740,7 @@ namespace MyAnimeListInfo
             }
         }
 
-        private static List<RelatedAnime> GetRelatedAnime(HtmlNode trNode, AnimeRecordCollection currentAnimeList)
+        private static List<RelatedAnime> GetRelatedAnime(HtmlNode trNode)
         {
             List<RelatedAnime> result = new List<RelatedAnime>();
 
@@ -762,16 +762,16 @@ namespace MyAnimeListInfo
 
                         int id = 0;
                         if (int.TryParse(idString, out id))
-                            result.Add(new RelatedAnime() { Id = id, Name = GetInnerText(aNode), Relation = relation, AnimeRecord = currentAnimeList.Get(id) });
+                            result.Add(new RelatedAnime() { Id = id, Name = GetInnerText(aNode), Relation = relation });
                     }
             }
             if (trNode.Element("tr") != null)
-                result.AddRange(GetRelatedAnime(trNode.Element("tr"), currentAnimeList));
+                result.AddRange(GetRelatedAnime(trNode.Element("tr")));
 
             return result;
         }
 
-        private static List<RecommendedAnime> GetRecommendedAnime(string address, AnimeRecordCollection currentAnimeList)
+        private static List<RecommendedAnime> GetRecommendedAnime(string address)
         {
             List<RecommendedAnime> result = new List<RecommendedAnime>();
             HtmlDocument doc = new HtmlDocument();
@@ -799,7 +799,6 @@ namespace MyAnimeListInfo
                     if (int.TryParse(idString, out id))
                     {
                         recAnime.Id = id;
-                        recAnime.AnimeRecord = currentAnimeList.Get(id);
                         recAnime.Name = GetInnerText(aNode.Element("strong"));
                         break;
                     }

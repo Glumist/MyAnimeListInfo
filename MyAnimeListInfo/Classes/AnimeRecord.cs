@@ -1,4 +1,5 @@
-﻿using System;
+﻿using JikanDotNet;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -221,7 +222,7 @@ namespace MyAnimeListInfo
             }
         }
 
-        public string Progress { get { return "" + _watched + " / " +(_quantity > 0 ? ""+_quantity : "∞"); } }
+        public string Progress { get { return "" + _watched + " / " + (_quantity > 0 ? "" + _quantity : "∞"); } }
 
         #endregion
 
@@ -231,6 +232,25 @@ namespace MyAnimeListInfo
             Genres = new List<string>();
             RelatedAnime = new List<RelatedAnime>();
             RecommendedAnime = new List<RecommendedAnime>();
+        }
+
+        public AnimeRecord(AnimeListEntry animeListEntry)
+            : this()
+        {
+            Id = (int)animeListEntry.MalId;
+            UserScore = animeListEntry.Score;
+            Watched = animeListEntry.WatchedEpisodes ?? 0;
+            UserStartDate = animeListEntry.WatchStartDate;
+            UserEndDate = animeListEntry.WatchEndDate;
+            switch (animeListEntry.WatchingStatus)
+            {
+                case UserAnimeListExtension.Completed: UserStatus = UserStatus.Completed; break;
+                case UserAnimeListExtension.Dropped: UserStatus = UserStatus.Dropped; break;
+                case UserAnimeListExtension.OnHold: UserStatus = UserStatus.OnHold; break;
+                case UserAnimeListExtension.PlanToWatch: UserStatus = UserStatus.Planned; break;
+                case UserAnimeListExtension.Watching: UserStatus = UserStatus.Watching; break;
+                default: UserStatus = UserStatus.Unknown; break;
+            }
         }
 
         public bool CopyUserInfo(AnimeRecord record)
@@ -349,6 +369,97 @@ namespace MyAnimeListInfo
             return updated;
         }
 
+        public bool CopyAnimeInfo(Anime record)
+        {
+            bool updated = false;
+
+            if (Name != record.Title)
+            {
+                Name = record.Title;
+                updated = true;
+            }
+
+            if (Type != record.Type)
+            {
+                Type = record.Type;
+                updated = true;
+            }
+
+            int episodes = 0;
+            if (!string.IsNullOrWhiteSpace(record.Episodes))
+                episodes = int.Parse(record.Episodes);
+            if (Quantity != episodes)
+            {
+                Quantity = episodes;
+                updated = true;
+            }
+
+            if (Status != record.Status)
+            {
+                Status = record.Status;
+                updated = true;
+            }
+
+            if (StartDate != record.Aired.From)
+            {
+                StartDate = record.Aired.From;
+                updated = true;
+            }
+
+            if (EndDate != record.Aired.To)
+            {
+                EndDate = record.Aired.To;
+                updated = true;
+            }
+
+            if (EpisodeDuration != record.Duration)
+            {
+                EpisodeDuration = record.Duration;
+                updated = true;
+            }
+
+            List<AlternativeTitle> newTitles = new List<AlternativeTitle>();
+            newTitles.Add(new AlternativeTitle() { Language = "English", Title = record.TitleEnglish ?? "" });
+            newTitles.Add(new AlternativeTitle() { Language = "Japanese", Title = record.TitleJapanese ?? "" });
+            foreach (string title in record.TitleSynonyms)
+                newTitles.Add(new AlternativeTitle() { Language = "", Title = record.TitleJapanese });
+            if (!AlternativeTitle.Equals(AlternativeTitles, newTitles))
+            {
+                AlternativeTitles = newTitles;
+                updated = true;
+            }
+
+            List<RelatedAnime> newRelated = MyAnimeListInfo.RelatedAnime.GetRelatedAnimes(record.Related);
+            if (MyAnimeListInfo.RelatedAnime.Equals(RelatedAnime, newRelated))
+            {
+                RelatedAnime = newRelated;
+                updated = true;
+            }
+
+            List<string> newGenres = new List<string>();
+            foreach (MALSubItem genre in record.Genres)
+                newGenres.Add(genre.Name);
+            if (Genres != newGenres)
+            {
+                Genres = newGenres;
+                updated = true;
+            }
+
+            if (ImageAddress != record.ImageURL)
+            {
+                ImageAddress = record.ImageURL;
+                updated = true;
+            }
+
+            if (Synopsis != record.Synopsis)
+            {
+                Synopsis = record.Synopsis;
+                updated = true;
+            }
+
+            return updated;
+        }
+
         public override string ToString()
         {
             return Name;
@@ -413,6 +524,7 @@ namespace MyAnimeListInfo
     public class AnimeRecordCollection
     {
         private static string fileName = "AnimeList.xml";
+        private static AnimeRecordCollection _animeRecordCollection;
 
         private List<AnimeRecord> _animeList;
         public List<AnimeRecord> AnimeList
@@ -429,106 +541,119 @@ namespace MyAnimeListInfo
             set { _animeDictionary = value; }
         }
 
-        public AnimeRecordCollection()
+        private AnimeRecordCollection()
         {
             AnimeList = new List<AnimeRecord>();
             AnimeDictionary = new Dictionary<int, AnimeRecord>();
         }
 
-        public int Update(List<AnimeRecord> animeRecords)
+        public static AnimeRecordCollection GetInstance()
+        {
+            if (_animeRecordCollection == null)
+                _animeRecordCollection = Load();
+            return _animeRecordCollection;
+        }
+
+        public static int Update(List<AnimeRecord> animeRecords)
         {
             int count = 0;
 
             foreach (AnimeRecord record in animeRecords)
             {
-                if (!_animeDictionary.ContainsKey(record.Id))
+                if (!GetInstance().AnimeDictionary.ContainsKey(record.Id))
                 {
-                    _animeList.Add(record);
-                    _animeDictionary.Add(record.Id, record);
+                    GetInstance().AnimeList.Add(record);
+                    GetInstance().AnimeDictionary.Add(record.Id, record);
                     count++;
-
-                    foreach (RelatedAnime related in record.RelatedAnime)
-                        related.AnimeRecord = Get(related.Id);
-
-                    foreach (AnimeRecord rec in AnimeList)
-                        foreach (RelatedAnime rel in rec.RelatedAnime)
-                            if (rel.Id == record.Id)
-                                rel.AnimeRecord = record;
                 }
                 else
                 {
-                    AnimeRecord oldRecord = _animeDictionary[record.Id];
+                    AnimeRecord oldRecord = GetInstance().AnimeDictionary[record.Id];
                     if (oldRecord.CopyUserInfo(record))
                         count++;
                 }
             }
 
             List<AnimeRecord> toDelete = new List<AnimeRecord>();
-            foreach (int id in _animeDictionary.Keys)
+            foreach (int id in GetInstance().AnimeDictionary.Keys)
                 if (!animeRecords.Exists(ar => ar.Id == id))
-                    toDelete.Add(_animeDictionary[id]);
+                    toDelete.Add(GetInstance().AnimeDictionary[id]);
 
             count += toDelete.Count;
             foreach (AnimeRecord record in toDelete)
             {
-                _animeList.Remove(record);
-                _animeDictionary.Remove(record.Id);
+                GetInstance().AnimeList.Remove(record);
+                GetInstance().AnimeDictionary.Remove(record.Id);
                 record.UserStatus = UserStatus.Unknown;
             }
 
             return count;
         }
 
-        public AnimeRecord Get(int id)
+        public static AnimeRecord Get(int id)
         {
-            if (AnimeDictionary.ContainsKey(id))
-                return AnimeDictionary[id];
+            if (GetInstance().AnimeDictionary.ContainsKey(id))
+                return GetInstance().AnimeDictionary[id];
             return null;
         }
 
-        public void AddAndSave(AnimeRecord record)
+        public static int Count
+        {
+            get { return GetInstance().AnimeList.Count; }
+        }
+
+        public static void AddAndSave(AnimeRecord record)
         {
             if (Get(record.Id) != null)
                 return;
 
-            AnimeList.Add(record);
-            AnimeDictionary.Add(record.Id, record);
+            GetInstance().AnimeList.Add(record);
+            GetInstance().AnimeDictionary.Add(record.Id, record);
 
             Save();
         }
 
-        public void DeleteAndSave(AnimeRecord record)
+        public static void DeleteAndSave(AnimeRecord record)
         {
             if (Get(record.Id) == null)
                 return;
 
-            AnimeList.Remove(record);
-            AnimeDictionary.Remove(record.Id);
+            GetInstance().AnimeList.Remove(record);
+            GetInstance().AnimeDictionary.Remove(record.Id);
 
             Save();
         }
 
-        public List<AnimeRecord> SelectNotInList(List<AnimeRecord> records)
+        public static List<AnimeRecord> SelectNotInList(List<AnimeRecord> records)
         {
             List<AnimeRecord> newRecords = new List<AnimeRecord>();
             foreach (AnimeRecord record in records)
-                if (!_animeDictionary.ContainsKey(record.Id))
+                if (!GetInstance().AnimeDictionary.ContainsKey(record.Id))
                     newRecords.Add(record);
             return newRecords;
         }
 
-        public void Clear()
+        public static List<AnimeListEntry> SelectNotInList(ICollection<AnimeListEntry> records)
         {
-            _animeList.Clear();
-            _animeDictionary.Clear();
+            List<AnimeListEntry> newRecords = new List<AnimeListEntry>();
+            foreach (AnimeListEntry record in records)
+                if (!GetInstance().AnimeDictionary.ContainsKey((int)record.MalId))
+                    newRecords.Add(record);
+            return newRecords;
         }
 
-        public void Save()
+        public static void Clear()
         {
-            XmlSerializeHelper.SerializeAndSave(fileName, this);
+            GetInstance().AnimeList.Clear();
+            GetInstance().AnimeDictionary.Clear();
         }
 
-        public static AnimeRecordCollection Load()
+        public static void Save()
+        {
+            XmlSerializeHelper.SerializeAndSave(fileName, GetInstance());
+        }
+
+        private static AnimeRecordCollection Load()
         {
             AnimeRecordCollection result;
             try
@@ -543,13 +668,13 @@ namespace MyAnimeListInfo
             foreach (AnimeRecord record in result.AnimeList)
                 result.AnimeDictionary[record.Id] = record;
 
-            foreach (AnimeRecord record in result.AnimeList)
+            /*foreach (AnimeRecord record in result.AnimeList)
             {
                 foreach (RelatedAnime related in record.RelatedAnime)
                     related.AnimeRecord = result.Get(related.Id);
                 foreach (RecommendedAnime recommended in record.RecommendedAnime)
                     recommended.AnimeRecord = result.Get(recommended.Id);
-            }
+            }*/
 
             result.AnimeList.Sort(AnimeRecord.CompareByName);
 
@@ -614,20 +739,29 @@ namespace MyAnimeListInfo
             set { _relation = value; }
         }
 
+        public RelatedAnime() { }
+
+        public RelatedAnime(MALSubItem mALSubItem, string relation)
+            : this()
+        {
+            Id = (int)mALSubItem.MalId;
+            Name = mALSubItem.Name;
+            Relation = relation;
+        }
+
         public override string ToString()
         {
             return Name;
         }
 
-        private AnimeRecord _record;
+        //private AnimeRecord _record;
         [XmlIgnore]
         public AnimeRecord AnimeRecord
         {
-            get { return _record; }
-            set { _record = value; }
+            get { return AnimeRecordCollection.Get(Id); }
         }
 
-        public UserStatus UserStatus { get { return _record != null ? _record.UserStatus : MyAnimeListInfo.UserStatus.Unknown; } }
+        public UserStatus UserStatus { get { return AnimeRecord != null ? AnimeRecord.UserStatus : MyAnimeListInfo.UserStatus.Unknown; } }
 
         public static bool Equals(List<RelatedAnime> a, List<RelatedAnime> b)
         {
@@ -640,6 +774,52 @@ namespace MyAnimeListInfo
                     return false;
 
             return true;
+        }
+
+        public static List<RelatedAnime> GetRelatedAnimes(JikanDotNet.RelatedAnime relatedList)
+        {
+            List<RelatedAnime> result = new List<RelatedAnime>();
+            if (relatedList.Adaptations != null)
+                foreach (MALSubItem related in relatedList.Adaptations)
+                    result.Add(new RelatedAnime(related, "Adaptation"));
+            if (relatedList.AlternativeSettings != null)
+                foreach (MALSubItem related in relatedList.AlternativeSettings)
+                    result.Add(new RelatedAnime(related, "AlternativeSetting"));
+            if (relatedList.AlternativeVersions != null)
+                foreach (MALSubItem related in relatedList.AlternativeVersions)
+                    result.Add(new RelatedAnime(related, "AlternativeVersion"));
+            if (relatedList.Characters != null)
+                foreach (MALSubItem related in relatedList.Characters)
+                    result.Add(new RelatedAnime(related, "Character"));
+            if (relatedList.FullStories != null)
+                foreach (MALSubItem related in relatedList.FullStories)
+                    result.Add(new RelatedAnime(related, "FullStory"));
+            if (relatedList.Others != null)
+                foreach (MALSubItem related in relatedList.Others)
+                    result.Add(new RelatedAnime(related, "Other"));
+            if (relatedList.ParentStories != null)
+                foreach (MALSubItem related in relatedList.ParentStories)
+                    result.Add(new RelatedAnime(related, "ParentStory"));
+            if (relatedList.ParentStories != null)
+                foreach (MALSubItem related in relatedList.ParentStories)
+                    result.Add(new RelatedAnime(related, "ParentStory"));
+            if (relatedList.Prequels != null)
+                foreach (MALSubItem related in relatedList.Prequels)
+                    result.Add(new RelatedAnime(related, "Prequel"));
+            if (relatedList.Sequels != null)
+                foreach (MALSubItem related in relatedList.Sequels)
+                    result.Add(new RelatedAnime(related, "Sequel"));
+            if (relatedList.SideStories != null)
+                foreach (MALSubItem related in relatedList.SideStories)
+                    result.Add(new RelatedAnime(related, "SideStory"));
+            if (relatedList.SpinOffs != null)
+                foreach (MALSubItem related in relatedList.SpinOffs)
+                    result.Add(new RelatedAnime(related, "SpinOff"));
+            if (relatedList.Summaries != null)
+                foreach (MALSubItem related in relatedList.Summaries)
+                    result.Add(new RelatedAnime(related, "Summary"));
+
+            return result;
         }
     }
 
@@ -678,15 +858,14 @@ namespace MyAnimeListInfo
             return Name;
         }
 
-        private AnimeRecord _record;
+        //private AnimeRecord _record;
         [XmlIgnore]
         public AnimeRecord AnimeRecord
         {
-            get { return _record; }
-            set { _record = value; }
+            get { return AnimeRecordCollection.Get(Id); }
         }
 
-        public UserStatus UserStatus { get { return _record != null ? _record.UserStatus : MyAnimeListInfo.UserStatus.Unknown; } }
+        public UserStatus UserStatus { get { return AnimeRecord != null ? AnimeRecord.UserStatus : MyAnimeListInfo.UserStatus.Unknown; } }
 
         public static bool Equals(List<RelatedAnime> a, List<RelatedAnime> b)
         {
@@ -746,12 +925,11 @@ namespace MyAnimeListInfo
             set { _recordId = value; }
         }
 
-        private AnimeRecord _record;
+        //private AnimeRecord _record;
         [XmlIgnore]
         public AnimeRecord AnimeRecord
         {
-            get { return _record; }
-            set { _record = value; }
+            get { return AnimeRecordCollection.Get(RecordId); }
         }
 
         private string _field = "";
@@ -788,7 +966,7 @@ namespace MyAnimeListInfo
 
         public AnimeNews(AnimeRecord record, string field, string text)
         {
-            _record = record;
+            //_record = record;
             _field = field;
             _text = text;
             _recordId = record.Id;
@@ -804,6 +982,7 @@ namespace MyAnimeListInfo
     public class AnimeNewsCollection
     {
         private static string fileName = "AnimeNews.xml";
+        private static AnimeNewsCollection _animeNewsCollection;
 
         private List<AnimeNews> _newsList;
         public List<AnimeNews> NewsList
@@ -812,35 +991,42 @@ namespace MyAnimeListInfo
             set { _newsList = value; }
         }
 
-        public AnimeNewsCollection()
+        private AnimeNewsCollection()
         {
             _newsList = new List<AnimeNews>();
         }
 
+        public static AnimeNewsCollection GetInstance()
+        {
+            if (_animeNewsCollection == null)
+                _animeNewsCollection = Load();
+            return _animeNewsCollection;
+        }
+
         public void Add(List<AnimeNews> news)
         {
-            _newsList.AddRange(news);
-            _newsList.Sort(AnimeNews.Comparer);
+            NewsList.AddRange(news);
+            NewsList.Sort(AnimeNews.Comparer);
         }
 
-        public void Clear()
+        public static void Clear()
         {
-            _newsList.Clear();
+            GetInstance().NewsList.Clear();
         }
 
-        public void MarkRead()
+        public static void MarkRead()
         {
-            _newsList.ForEach(n => n.Read = true);
+            GetInstance().NewsList.ForEach(n => n.Read = true);
         }
 
-        public void Save()
+        public static void Save()
         {
             AnimeNewsCollection unreadNews = new AnimeNewsCollection();
-            unreadNews.Add(this.NewsList.FindAll(n => !n.Read));
+            unreadNews.Add(GetInstance().NewsList.FindAll(n => !n.Read));
             XmlSerializeHelper.SerializeAndSave(fileName, unreadNews);
         }
 
-        public static AnimeNewsCollection Load(AnimeRecordCollection animeList)
+        private static AnimeNewsCollection Load()
         {
             AnimeNewsCollection result;
             try
@@ -851,9 +1037,6 @@ namespace MyAnimeListInfo
             {
                 return new AnimeNewsCollection();
             }
-
-            foreach (AnimeNews news in result.NewsList)
-                news.AnimeRecord = animeList.Get(news.RecordId);
 
             return result;
         }

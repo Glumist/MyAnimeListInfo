@@ -9,20 +9,17 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using HtmlAgilityPack;
 using System.Threading;
+using JikanDotNet;
 
 namespace MyAnimeListInfo
 {
     public partial class FormMain : Form
     {
         Settings settings;
-        AnimeRecordCollection animeList;
-        AnimeNewsCollection newsList;
+        //AnimeRecordCollection animeList;
+        //AnimeNewsCollection newsList;
         bool inUpdate = false;
         Microsoft.WindowsAPICodePack.Taskbar.TaskbarManager TaskbarProgress = Microsoft.WindowsAPICodePack.Taskbar.TaskbarManager.Instance;
-
-        BackgroundWorker bgwInitLoader;
-        BackgroundWorker bgwListLoader;
-        BackgroundWorker bgwInfoUpdater;
 
         private static string _password;
         public static string Password
@@ -47,130 +44,124 @@ namespace MyAnimeListInfo
             tscbShowList.Items.Add("Отвергнутые");
             tscbShowList.Items.Add("Запланированные");
             tscbShowList.SelectedIndex = 0;
-
-            dgvAnimeList.AutoGenerateColumns = false;
-            dgvSearch.AutoGenerateColumns = false;
-            dgvNews.AutoGenerateColumns = false;
-
-            bgwInitLoader = new BackgroundWorker();
-            bgwInitLoader.DoWork += BgwInitLoader_DoWork;
-            bgwInitLoader.RunWorkerCompleted += BgwInitLoader_RunWorkerCompleted;
-
-            bgwListLoader = new BackgroundWorker();
-            bgwListLoader.DoWork += BgwListLoader_DoWork;
-            bgwListLoader.RunWorkerCompleted += BgwListLoader_RunWorkerCompleted;
-            bgwListLoader.ProgressChanged += BgwListLoader_ProgressChanged;
-            bgwListLoader.WorkerReportsProgress = true;
-
-            bgwInfoUpdater = new BackgroundWorker();
-            bgwInfoUpdater.DoWork += BgwInfoUpdater_DoWork;
-            bgwInfoUpdater.RunWorkerCompleted += BgwInfoUpdater_RunWorkerCompleted;
-            bgwInfoUpdater.ProgressChanged += BgwListLoader_ProgressChanged;
-            bgwInfoUpdater.WorkerReportsProgress = true;
         }
 
         private void FormMain_Load(object sender, EventArgs e)
         {
-            bgwInitLoader.RunWorkerAsync();
+            InitAsync();
         }
 
-        #region Background Workers
-
-        private void BgwInitLoader_DoWork(object sender, DoWorkEventArgs e)
+        private async void InitAsync()
         {
-            settings = Settings.Load();
-            animeList = AnimeRecordCollection.Load();
-            newsList = AnimeNewsCollection.Load(animeList);
-        }
-
-        private void BgwInitLoader_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
+            settings = await Task.Run(() => Settings.Load());
+            await Task.Run(() => AnimeRecordCollection.GetInstance());
+            await Task.Run(() => AnimeNewsCollection.GetInstance());
             RefreshTables();
         }
 
-        private void BgwListLoader_DoWork(object sender, DoWorkEventArgs e)
+        private async void UpdateListAsync()
         {
-            if (e.Argument != null && e.Argument is string)
+            string userName = settings.Username.Trim();
+            if (string.IsNullOrWhiteSpace(userName))
             {
-                List<AnimeRecord> animeRecords = HtmlHelper.GetAnimeListXml(e.Argument as string);
-                //Dictionary<int, AnimeRecord> relatedDic = new Dictionary<int, AnimeRecord>();
-
-                List<AnimeRecord> toAdd = animeList.SelectNotInList(animeRecords);
-                for (int i = 0; i < toAdd.Count; i++)
-                {
-                    HtmlHelper.GetAnimeInfo(toAdd[i], animeList);
-
-                    /*foreach (RelatedAnime related in toAdd[i].RelatedAnime)
-                    {
-                        if (related.AnimeRecord == null)
-                            related.AnimeRecord = animeList.Get(related.Id);
-                        if (related.AnimeRecord != null)
-                            continue;
-
-                        if (relatedDic.ContainsKey(related.Id))
-                            related.AnimeRecord = relatedDic[related.Id];
-                        else
-                        {
-                            AnimeRecord rel = new AnimeRecord() { Id = related.Id };
-                            HtmlHelper.GetAnimeInfo(rel, animeList);
-                            relatedDic.Add(related.Id, rel);
-                        }
-                    }*/
-
-                    bgwListLoader.ReportProgress(i * 100 / toAdd.Count);
-                }
-
-                inUpdate = true;
-                e.Result = animeList.Update(animeRecords);
+                MessageBox.Show("Не заполнено поле 'Пользователь' в настройках");
+                return;
             }
-        }
+            tsmiRefresh.Enabled = false;
 
-        private void BgwListLoader_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            if (tspbLoading.Value != e.ProgressPercentage)
+            IJikan jikan = new Jikan(true);
+            int? totalEntries = (await jikan.GetUserProfile(userName)).AnimeStatistics.TotalEntries;
+            if (!totalEntries.HasValue)
+                return;
+            ShowProgress(totalEntries.Value);
+            List<AnimeRecord> animeRecords = new List<AnimeRecord>();
+            for (int page = 1; page * 300 <= totalEntries.Value; page++)
             {
-                tspbLoading.Value = e.ProgressPercentage;
-                if (ShowInTaskbar)
-                    TaskbarProgress.SetProgressValue(e.ProgressPercentage, 100);
+                UserAnimeList list = await jikan.GetUserAnimeList(userName, page);
+                foreach (AnimeListEntry animeEntry in list.Anime)
+                    animeRecords.Add(new AnimeRecord(animeEntry));
             }
-        }
-
-        private void BgwListLoader_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (ShowInTaskbar)
-                TaskbarProgress.SetProgressState(Microsoft.WindowsAPICodePack.Taskbar.TaskbarProgressBarState.NoProgress);
-            tspbLoading.Visible = false;
-            if (e.Result != null && e.Result is int)
+            //List<AnimeRecord> animeRecords = await Task.Run(() => HtmlHelper.GetAnimeListXml(userName));
+            List<AnimeRecord> toAdd = AnimeRecordCollection.SelectNotInList(animeRecords);
+            ShowProgress(toAdd.Count);
+            for (int i = 0; i < toAdd.Count; i++)
             {
-                RefreshTables();
-                MessageBox.Show("Обновлено " + (int)e.Result + " записей");
-                if ((int)e.Result > 0)
-                    animeList.Save();
+                //await Task.Run(() => HtmlHelper.GetAnimeInfo(toAdd[i]));
+                Anime anime = await jikan.GetAnime(toAdd[i].Id);
+                if (anime != null)
+                    toAdd[i].CopyAnimeInfo(anime);
+                else
+                    await Task.Run(() => HtmlHelper.GetAnimeInfo(toAdd[i]));
+
+                UpdateProgress(i, toAdd.Count);
             }
+
+            inUpdate = true;
+            int updated = AnimeRecordCollection.Update(animeRecords);
+
+            HideProgress();
+
+            RefreshTables();
+            MessageBox.Show("Обновлено " + updated + " записей");
+            if (updated > 0)
+                AnimeRecordCollection.Save();
+
             inUpdate = false;
             tsmiRefresh.Enabled = true;
         }
 
-        private void BgwInfoUpdater_DoWork(object sender, DoWorkEventArgs e)
+        private async void UpdateAnimeAsync()
         {
-            for (int i = 0; i < animeList.AnimeList.Count; i++)
+            tsmiRefresh.Enabled = false;
+            ShowProgress(AnimeRecordCollection.Count);
+            try
             {
-                List<AnimeNews> news = HtmlHelper.GetAnimeInfo(animeList.AnimeList[i], animeList);
-                if (animeList.AnimeList[i].UserStatus != UserStatus.Dropped)
-                    newsList.Add(news);
-                bgwInfoUpdater.ReportProgress(i * 100 / animeList.AnimeList.Count);
+                for (int i = 0; i < AnimeRecordCollection.Count; i++)
+                {
+                    List<AnimeNews> news = await Task.Run(() => HtmlHelper.GetAnimeInfo(AnimeRecordCollection.GetInstance().AnimeList[i]));
+                    if (AnimeRecordCollection.GetInstance().AnimeList[i].UserStatus != UserStatus.Dropped)
+                        AnimeNewsCollection.GetInstance().Add(news);
+                    UpdateProgress(i, AnimeRecordCollection.Count);
+                }
+                HideProgress();
+
+                AnimeRecordCollection.Save();
+                AnimeNewsCollection.Save();
+                RefreshTables();
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            tsmiRefresh.Enabled = true;
         }
 
-        private void BgwInfoUpdater_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        #region ShowProgress
+
+        private void ShowProgress(int max)
+        {
+            if (ShowInTaskbar)
+            {
+                TaskbarProgress.SetProgressState(Microsoft.WindowsAPICodePack.Taskbar.TaskbarProgressBarState.Normal);
+                TaskbarProgress.SetProgressValue(0, max);
+            }
+            tspbLoading.Visible = true;
+            tspbLoading.Value = 0;
+            tspbLoading.Maximum = max;
+        }
+
+        private void UpdateProgress(int current, int max)
+        {
+            tspbLoading.Value = current;
+            if (ShowInTaskbar)
+                TaskbarProgress.SetProgressValue(current, max);
+        }
+
+        private void HideProgress()
         {
             if (ShowInTaskbar)
                 TaskbarProgress.SetProgressState(Microsoft.WindowsAPICodePack.Taskbar.TaskbarProgressBarState.NoProgress);
             tspbLoading.Visible = false;
-            animeList.Save();
-            newsList.Save();
-            RefreshTables();
-            tsmiRefresh.Enabled = true;
         }
 
         #endregion
@@ -179,6 +170,10 @@ namespace MyAnimeListInfo
 
         private void RefreshTables()
         {
+            dgvAnimeList.AutoGenerateColumns = false;
+            dgvSearch.AutoGenerateColumns = false;
+            dgvNews.AutoGenerateColumns = false;
+
             colListUserStatus.Visible = false;
             colListUserScore.Visible = true;
             colListUserProgress.Visible = true;
@@ -192,9 +187,9 @@ namespace MyAnimeListInfo
             colListQuantity.Visible = false;
             colListScore.Visible = false;
 
-            if (animeList == null)
+            if (AnimeRecordCollection.GetInstance() == null)
                 return;
-            List<AnimeRecord> filtered = new List<AnimeRecord>(animeList.AnimeList);
+            List<AnimeRecord> filtered = new List<AnimeRecord>(AnimeRecordCollection.GetInstance().AnimeList);
 
             if (tscbShowList.SelectedIndex == 0)
             {
@@ -254,7 +249,7 @@ namespace MyAnimeListInfo
 
             dgvAnimeList.DataSource = filtered;
 
-            dgvNews.DataSource = new List<AnimeNews>(newsList.NewsList);
+            dgvNews.DataSource = new List<AnimeNews>(AnimeNewsCollection.GetInstance().NewsList);
         }
 
         private void RefreshInfo()
@@ -273,7 +268,7 @@ namespace MyAnimeListInfo
                 else if (dgv.SelectedRows[0].DataBoundItem is AnimeNews)
                     record = (dgv.SelectedRows[0].DataBoundItem as AnimeNews).AnimeRecord;
                 if (record != null)
-                    pAnimeInfo.SetAnime(animeList, record);
+                    pAnimeInfo.SetAnime(record);
                 pEmpty.SendToBack();
             }
             else
@@ -320,40 +315,17 @@ namespace MyAnimeListInfo
 
         private void tsmiRefreshInfo_Click(object sender, EventArgs e)
         {
-            if (ShowInTaskbar)
-            {
-                TaskbarProgress.SetProgressState(Microsoft.WindowsAPICodePack.Taskbar.TaskbarProgressBarState.Normal);
-                TaskbarProgress.SetProgressValue(0, 100);
-            }
-            tsmiRefresh.Enabled = false;
-            tspbLoading.Visible = true;
-            tspbLoading.Value = 0;
-            bgwInfoUpdater.RunWorkerAsync();
+            UpdateAnimeAsync();
         }
 
         private void tsmiRefreshUserStats_Click(object sender, EventArgs e)
         {
-            string userName = settings.Username.Trim();
-            if (string.IsNullOrWhiteSpace(userName))
-            {
-                MessageBox.Show("Не заполнено поле 'Пользователь' в настройках");
-                return;
-            }
-
-            if (ShowInTaskbar)
-            {
-                TaskbarProgress.SetProgressState(Microsoft.WindowsAPICodePack.Taskbar.TaskbarProgressBarState.Normal);
-                TaskbarProgress.SetProgressValue(0, 100);
-            }
-            tspbLoading.Visible = true;
-            tspbLoading.Value = 0;
-            tsmiRefresh.Enabled = false;
-            bgwListLoader.RunWorkerAsync(userName);
+            UpdateListAsync();
         }
 
         private void tsmiRefreshFull_Click(object sender, EventArgs e)
         {
-            animeList.Clear();
+            AnimeRecordCollection.Clear();
             tsmiRefreshUserStats_Click(sender, e);
         }
 
@@ -365,14 +337,14 @@ namespace MyAnimeListInfo
 
         private void tsmiMarkRead_Click(object sender, EventArgs e)
         {
-            newsList.MarkRead();
-            newsList.Save();
+            AnimeNewsCollection.MarkRead();
+            AnimeNewsCollection.Save();
         }
 
         private void tsmiRemoveAll_Click(object sender, EventArgs e)
         {
-            newsList.Clear();
-            newsList.Save();
+            AnimeNewsCollection.Clear();
+            AnimeNewsCollection.Save();
         }
 
         private void tsSearch_KeyDown(object sender, KeyEventArgs e)
@@ -392,7 +364,7 @@ namespace MyAnimeListInfo
                 if (string.IsNullOrWhiteSpace(Password))
                     return;
 
-                dgvSearch.DataSource = HtmlHelper.SearchForAnime(animeList, tstbSearchText.Text.Trim(), settings.Username, Password);
+                dgvSearch.DataSource = HtmlHelper.SearchForAnime(tstbSearchText.Text.Trim(), settings.Username, Password);
             }
         }
 

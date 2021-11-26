@@ -12,38 +12,27 @@ namespace MyAnimeListInfo
 {
     public partial class FormRecommendedAnime : Form
     {
-        BackgroundWorker _animeLoader;
         RecommendedAnime _recAnime;
-        AnimeRecordCollection _animeList;
 
-        public FormRecommendedAnime(RecommendedAnime recAnime, AnimeRecordCollection animeList)
+        public FormRecommendedAnime(RecommendedAnime recAnime)
         {
             InitializeComponent();
 
-            _animeLoader = new BackgroundWorker();
-            _animeLoader.DoWork += AnimeLoader_DoWork;
-            _animeLoader.RunWorkerCompleted += AnimeLoader_RunWorkerCompleted;
-
             _recAnime = recAnime;
-            _animeList = animeList;
             
             if (recAnime.AnimeRecord != null)
-                animeInfo.SetAnime(_animeList, _recAnime.AnimeRecord);
+                animeInfo.SetAnime(_recAnime.AnimeRecord);
             else
-                _animeLoader.RunWorkerAsync(recAnime.Id);
+                LoadAnime(recAnime.Id);
 
             dataGridView1.DataSource = new List<Recommendation>(_recAnime.Recommendations);
         }
 
-        private void AnimeLoader_DoWork(object sender, DoWorkEventArgs e)
+        private async void LoadAnime(int id)
         {
-            _recAnime.AnimeRecord = new AnimeRecord() { Id = _recAnime.Id };
-                HtmlHelper.GetAnimeInfo(_recAnime.AnimeRecord, _animeList);
-        }
-
-        private void AnimeLoader_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            animeInfo.SetAnime(_animeList, _recAnime.AnimeRecord);
+            AnimeRecord anime = new AnimeRecord() { Id = id };
+            await Task.Run(() => HtmlHelper.GetAnimeInfo(anime));
+            animeInfo.SetAnime(anime);
         }
     }
 }

@@ -28,6 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle13 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
@@ -38,25 +41,8 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle13 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             this.dgvAnimeList = new System.Windows.Forms.DataGridView();
-            this.colListUserStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListUserScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListType = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListUserProgress = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListUserStartDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListUserEndDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListDays = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListQuantity = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListStartDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListEndDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListRating = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colListPopularity = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.msMain = new System.Windows.Forms.MenuStrip();
             this.tsmiSettings = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiRefresh = new System.Windows.Forms.ToolStripMenuItem();
@@ -89,10 +75,24 @@
             this.msNews = new System.Windows.Forms.MenuStrip();
             this.tsmiMarkRead = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiRemoveAll = new System.Windows.Forms.ToolStripMenuItem();
-            this.pAnimeInfo = new MyAnimeListInfo.UserControlAnimeInfo();
             this.pEmpty = new System.Windows.Forms.Panel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.tspbLoading = new System.Windows.Forms.ToolStripProgressBar();
+            this.pAnimeInfo = new MyAnimeListInfo.UserControlAnimeInfo();
+            this.colListUserStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListUserScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListUserProgress = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListUserStartDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListUserEndDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListDays = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListQuantity = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListStartDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListEndDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListRating = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colListPopularity = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAnimeList)).BeginInit();
             this.msMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.scMain)).BeginInit();
@@ -142,141 +142,9 @@
             this.dgvAnimeList.ReadOnly = true;
             this.dgvAnimeList.RowHeadersVisible = false;
             this.dgvAnimeList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvAnimeList.Size = new System.Drawing.Size(959, 1013);
+            this.dgvAnimeList.Size = new System.Drawing.Size(936, 1013);
             this.dgvAnimeList.TabIndex = 4;
             this.dgvAnimeList.SelectionChanged += new System.EventHandler(this.dgvList_SelectionChanged);
-            // 
-            // colListUserStatus
-            // 
-            this.colListUserStatus.DataPropertyName = "UserStatus";
-            this.colListUserStatus.HeaderText = "Статус";
-            this.colListUserStatus.Name = "colListUserStatus";
-            this.colListUserStatus.ReadOnly = true;
-            this.colListUserStatus.Width = 60;
-            // 
-            // colListName
-            // 
-            this.colListName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.colListName.DataPropertyName = "Name";
-            this.colListName.HeaderText = "Название";
-            this.colListName.Name = "colListName";
-            this.colListName.ReadOnly = true;
-            // 
-            // colListUserScore
-            // 
-            this.colListUserScore.DataPropertyName = "UserScore";
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.colListUserScore.DefaultCellStyle = dataGridViewCellStyle1;
-            this.colListUserScore.HeaderText = "Оценка";
-            this.colListUserScore.Name = "colListUserScore";
-            this.colListUserScore.ReadOnly = true;
-            this.colListUserScore.Width = 30;
-            // 
-            // colListScore
-            // 
-            this.colListScore.DataPropertyName = "Score";
-            this.colListScore.HeaderText = "Оценка общества";
-            this.colListScore.Name = "colListScore";
-            this.colListScore.ReadOnly = true;
-            this.colListScore.Width = 30;
-            // 
-            // colListType
-            // 
-            this.colListType.DataPropertyName = "Type";
-            this.colListType.HeaderText = "Тип";
-            this.colListType.Name = "colListType";
-            this.colListType.ReadOnly = true;
-            this.colListType.Width = 45;
-            // 
-            // colListUserProgress
-            // 
-            this.colListUserProgress.DataPropertyName = "Progress";
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.colListUserProgress.DefaultCellStyle = dataGridViewCellStyle2;
-            this.colListUserProgress.HeaderText = "Прогресс";
-            this.colListUserProgress.Name = "colListUserProgress";
-            this.colListUserProgress.ReadOnly = true;
-            this.colListUserProgress.Width = 55;
-            // 
-            // colListUserStartDate
-            // 
-            this.colListUserStartDate.DataPropertyName = "UserStartDate";
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.colListUserStartDate.DefaultCellStyle = dataGridViewCellStyle3;
-            this.colListUserStartDate.HeaderText = "Дата начала";
-            this.colListUserStartDate.Name = "colListUserStartDate";
-            this.colListUserStartDate.ReadOnly = true;
-            this.colListUserStartDate.Width = 65;
-            // 
-            // colListUserEndDate
-            // 
-            this.colListUserEndDate.DataPropertyName = "UserEndDate";
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.colListUserEndDate.DefaultCellStyle = dataGridViewCellStyle4;
-            this.colListUserEndDate.HeaderText = "Дата окончания";
-            this.colListUserEndDate.Name = "colListUserEndDate";
-            this.colListUserEndDate.ReadOnly = true;
-            this.colListUserEndDate.Width = 65;
-            // 
-            // colListDays
-            // 
-            this.colListDays.DataPropertyName = "Duration";
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.colListDays.DefaultCellStyle = dataGridViewCellStyle5;
-            this.colListDays.HeaderText = "Продолжительность";
-            this.colListDays.Name = "colListDays";
-            this.colListDays.ReadOnly = true;
-            this.colListDays.Width = 30;
-            // 
-            // colListQuantity
-            // 
-            this.colListQuantity.DataPropertyName = "Quantity";
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            this.colListQuantity.DefaultCellStyle = dataGridViewCellStyle6;
-            this.colListQuantity.HeaderText = "Кол-во серий";
-            this.colListQuantity.Name = "colListQuantity";
-            this.colListQuantity.ReadOnly = true;
-            this.colListQuantity.Width = 30;
-            // 
-            // colListStartDate
-            // 
-            this.colListStartDate.DataPropertyName = "StartDate";
-            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.colListStartDate.DefaultCellStyle = dataGridViewCellStyle7;
-            this.colListStartDate.HeaderText = "Дата начала";
-            this.colListStartDate.Name = "colListStartDate";
-            this.colListStartDate.ReadOnly = true;
-            this.colListStartDate.Width = 65;
-            // 
-            // colListEndDate
-            // 
-            this.colListEndDate.DataPropertyName = "EndDate";
-            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.colListEndDate.DefaultCellStyle = dataGridViewCellStyle8;
-            this.colListEndDate.HeaderText = "Дата окончания";
-            this.colListEndDate.Name = "colListEndDate";
-            this.colListEndDate.ReadOnly = true;
-            this.colListEndDate.Width = 65;
-            // 
-            // colListRating
-            // 
-            this.colListRating.DataPropertyName = "Rank";
-            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.colListRating.DefaultCellStyle = dataGridViewCellStyle9;
-            this.colListRating.HeaderText = "Рейтинг";
-            this.colListRating.Name = "colListRating";
-            this.colListRating.ReadOnly = true;
-            this.colListRating.Width = 40;
-            // 
-            // colListPopularity
-            // 
-            this.colListPopularity.DataPropertyName = "Popularity";
-            dataGridViewCellStyle10.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            this.colListPopularity.DefaultCellStyle = dataGridViewCellStyle10;
-            this.colListPopularity.HeaderText = "Популярность";
-            this.colListPopularity.Name = "colListPopularity";
-            this.colListPopularity.ReadOnly = true;
-            this.colListPopularity.Width = 50;
             // 
             // msMain
             // 
@@ -287,7 +155,7 @@
             this.msMain.Location = new System.Drawing.Point(0, 0);
             this.msMain.Name = "msMain";
             this.msMain.Padding = new System.Windows.Forms.Padding(9, 3, 0, 3);
-            this.msMain.Size = new System.Drawing.Size(1664, 35);
+            this.msMain.Size = new System.Drawing.Size(1522, 35);
             this.msMain.TabIndex = 5;
             this.msMain.Text = "menuStrip1";
             // 
@@ -344,8 +212,8 @@
             // 
             this.scMain.Panel2.Controls.Add(this.pAnimeInfo);
             this.scMain.Panel2.Controls.Add(this.pEmpty);
-            this.scMain.Size = new System.Drawing.Size(1664, 1089);
-            this.scMain.SplitterDistance = 975;
+            this.scMain.Size = new System.Drawing.Size(1522, 1089);
+            this.scMain.SplitterDistance = 952;
             this.scMain.SplitterWidth = 9;
             this.scMain.TabIndex = 6;
             // 
@@ -359,7 +227,7 @@
             this.tcMain.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tcMain.Name = "tcMain";
             this.tcMain.SelectedIndex = 0;
-            this.tcMain.Size = new System.Drawing.Size(975, 1089);
+            this.tcMain.Size = new System.Drawing.Size(952, 1089);
             this.tcMain.TabIndex = 5;
             this.tcMain.SelectedIndexChanged += new System.EventHandler(this.tcMain_SelectedIndexChanged);
             // 
@@ -371,7 +239,7 @@
             this.tpAll.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tpAll.Name = "tpAll";
             this.tpAll.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tpAll.Size = new System.Drawing.Size(967, 1056);
+            this.tpAll.Size = new System.Drawing.Size(944, 1056);
             this.tpAll.TabIndex = 0;
             this.tpAll.Text = "Все";
             this.tpAll.UseVisualStyleBackColor = true;
@@ -386,7 +254,7 @@
             this.tsList.Location = new System.Drawing.Point(4, 5);
             this.tsList.Name = "tsList";
             this.tsList.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
-            this.tsList.Size = new System.Drawing.Size(959, 33);
+            this.tsList.Size = new System.Drawing.Size(936, 33);
             this.tsList.TabIndex = 5;
             this.tsList.Text = "toolStrip1";
             // 
@@ -412,7 +280,7 @@
             this.tpSearch.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tpSearch.Name = "tpSearch";
             this.tpSearch.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tpSearch.Size = new System.Drawing.Size(967, 1042);
+            this.tpSearch.Size = new System.Drawing.Size(944, 1056);
             this.tpSearch.TabIndex = 7;
             this.tpSearch.Text = "Поиск";
             this.tpSearch.UseVisualStyleBackColor = true;
@@ -440,7 +308,7 @@
             this.dgvSearch.ReadOnly = true;
             this.dgvSearch.RowHeadersVisible = false;
             this.dgvSearch.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvSearch.Size = new System.Drawing.Size(959, 1001);
+            this.dgvSearch.Size = new System.Drawing.Size(936, 1015);
             this.dgvSearch.TabIndex = 7;
             this.dgvSearch.SelectionChanged += new System.EventHandler(this.dgvSearch_SelectionChanged);
             // 
@@ -506,7 +374,7 @@
             this.tsSearch.Location = new System.Drawing.Point(4, 5);
             this.tsSearch.Name = "tsSearch";
             this.tsSearch.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
-            this.tsSearch.Size = new System.Drawing.Size(959, 31);
+            this.tsSearch.Size = new System.Drawing.Size(936, 31);
             this.tsSearch.TabIndex = 8;
             this.tsSearch.Text = "toolStrip1";
             this.tsSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tsSearch_KeyDown);
@@ -536,7 +404,7 @@
             this.tpNews.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tpNews.Name = "tpNews";
             this.tpNews.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tpNews.Size = new System.Drawing.Size(967, 1042);
+            this.tpNews.Size = new System.Drawing.Size(944, 1056);
             this.tpNews.TabIndex = 6;
             this.tpNews.Text = "Новости";
             this.tpNews.UseVisualStyleBackColor = true;
@@ -561,7 +429,7 @@
             this.dgvNews.ReadOnly = true;
             this.dgvNews.RowHeadersVisible = false;
             this.dgvNews.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvNews.Size = new System.Drawing.Size(959, 997);
+            this.dgvNews.Size = new System.Drawing.Size(936, 1011);
             this.dgvNews.TabIndex = 1;
             this.dgvNews.SelectionChanged += new System.EventHandler(this.dgvList_SelectionChanged);
             // 
@@ -608,7 +476,7 @@
             this.msNews.Location = new System.Drawing.Point(4, 5);
             this.msNews.Name = "msNews";
             this.msNews.Padding = new System.Windows.Forms.Padding(9, 3, 0, 3);
-            this.msNews.Size = new System.Drawing.Size(959, 35);
+            this.msNews.Size = new System.Drawing.Size(936, 35);
             this.msNews.TabIndex = 0;
             this.msNews.Text = "menuStrip1";
             // 
@@ -626,22 +494,13 @@
             this.tsmiRemoveAll.Text = "Очистить";
             this.tsmiRemoveAll.Click += new System.EventHandler(this.tsmiRemoveAll_Click);
             // 
-            // pAnimeInfo
-            // 
-            this.pAnimeInfo.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pAnimeInfo.Location = new System.Drawing.Point(0, 0);
-            this.pAnimeInfo.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this.pAnimeInfo.Name = "pAnimeInfo";
-            this.pAnimeInfo.Size = new System.Drawing.Size(680, 1089);
-            this.pAnimeInfo.TabIndex = 0;
-            // 
             // pEmpty
             // 
             this.pEmpty.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pEmpty.Location = new System.Drawing.Point(0, 0);
             this.pEmpty.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.pEmpty.Name = "pEmpty";
-            this.pEmpty.Size = new System.Drawing.Size(680, 1089);
+            this.pEmpty.Size = new System.Drawing.Size(561, 1089);
             this.pEmpty.TabIndex = 0;
             // 
             // statusStrip1
@@ -652,7 +511,7 @@
             this.statusStrip1.Location = new System.Drawing.Point(0, 1124);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Padding = new System.Windows.Forms.Padding(2, 0, 21, 0);
-            this.statusStrip1.Size = new System.Drawing.Size(1664, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1522, 22);
             this.statusStrip1.TabIndex = 7;
             this.statusStrip1.Text = "ssMain";
             // 
@@ -662,11 +521,155 @@
             this.tspbLoading.Size = new System.Drawing.Size(150, 25);
             this.tspbLoading.Visible = false;
             // 
+            // pAnimeInfo
+            // 
+            this.pAnimeInfo.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pAnimeInfo.Location = new System.Drawing.Point(0, 0);
+            this.pAnimeInfo.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
+            this.pAnimeInfo.Name = "pAnimeInfo";
+            this.pAnimeInfo.Size = new System.Drawing.Size(561, 1089);
+            this.pAnimeInfo.TabIndex = 0;
+            // 
+            // colListUserStatus
+            // 
+            this.colListUserStatus.DataPropertyName = "UserStatus";
+            this.colListUserStatus.HeaderText = "Статус";
+            this.colListUserStatus.Name = "colListUserStatus";
+            this.colListUserStatus.ReadOnly = true;
+            this.colListUserStatus.Width = 60;
+            // 
+            // colListName
+            // 
+            this.colListName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.colListName.DataPropertyName = "Name";
+            this.colListName.HeaderText = "Название";
+            this.colListName.Name = "colListName";
+            this.colListName.ReadOnly = true;
+            // 
+            // colListUserScore
+            // 
+            this.colListUserScore.DataPropertyName = "UserScore";
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.colListUserScore.DefaultCellStyle = dataGridViewCellStyle1;
+            this.colListUserScore.HeaderText = "Оценка";
+            this.colListUserScore.Name = "colListUserScore";
+            this.colListUserScore.ReadOnly = true;
+            this.colListUserScore.Width = 30;
+            // 
+            // colListScore
+            // 
+            this.colListScore.DataPropertyName = "Score";
+            this.colListScore.HeaderText = "Оценка общества";
+            this.colListScore.Name = "colListScore";
+            this.colListScore.ReadOnly = true;
+            this.colListScore.Width = 30;
+            // 
+            // colListType
+            // 
+            this.colListType.DataPropertyName = "Type";
+            this.colListType.HeaderText = "Тип";
+            this.colListType.Name = "colListType";
+            this.colListType.ReadOnly = true;
+            this.colListType.Width = 45;
+            // 
+            // colListUserProgress
+            // 
+            this.colListUserProgress.DataPropertyName = "Progress";
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.colListUserProgress.DefaultCellStyle = dataGridViewCellStyle2;
+            this.colListUserProgress.HeaderText = "Прогресс";
+            this.colListUserProgress.Name = "colListUserProgress";
+            this.colListUserProgress.ReadOnly = true;
+            this.colListUserProgress.Width = 55;
+            // 
+            // colListUserStartDate
+            // 
+            this.colListUserStartDate.DataPropertyName = "UserStartDate";
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle3.Format = "dd.MM.yyyy";
+            this.colListUserStartDate.DefaultCellStyle = dataGridViewCellStyle3;
+            this.colListUserStartDate.HeaderText = "Дата начала";
+            this.colListUserStartDate.Name = "colListUserStartDate";
+            this.colListUserStartDate.ReadOnly = true;
+            this.colListUserStartDate.Width = 65;
+            // 
+            // colListUserEndDate
+            // 
+            this.colListUserEndDate.DataPropertyName = "UserEndDate";
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle4.Format = "dd.MM.yyyy";
+            this.colListUserEndDate.DefaultCellStyle = dataGridViewCellStyle4;
+            this.colListUserEndDate.HeaderText = "Дата окончания";
+            this.colListUserEndDate.Name = "colListUserEndDate";
+            this.colListUserEndDate.ReadOnly = true;
+            this.colListUserEndDate.Width = 65;
+            // 
+            // colListDays
+            // 
+            this.colListDays.DataPropertyName = "Duration";
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.colListDays.DefaultCellStyle = dataGridViewCellStyle5;
+            this.colListDays.HeaderText = "Продолжительность";
+            this.colListDays.Name = "colListDays";
+            this.colListDays.ReadOnly = true;
+            this.colListDays.Width = 30;
+            // 
+            // colListQuantity
+            // 
+            this.colListQuantity.DataPropertyName = "Quantity";
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            this.colListQuantity.DefaultCellStyle = dataGridViewCellStyle6;
+            this.colListQuantity.HeaderText = "Кол-во серий";
+            this.colListQuantity.Name = "colListQuantity";
+            this.colListQuantity.ReadOnly = true;
+            this.colListQuantity.Width = 30;
+            // 
+            // colListStartDate
+            // 
+            this.colListStartDate.DataPropertyName = "StartDate";
+            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle7.Format = "dd.MM.yyyy";
+            this.colListStartDate.DefaultCellStyle = dataGridViewCellStyle7;
+            this.colListStartDate.HeaderText = "Дата начала";
+            this.colListStartDate.Name = "colListStartDate";
+            this.colListStartDate.ReadOnly = true;
+            this.colListStartDate.Width = 65;
+            // 
+            // colListEndDate
+            // 
+            this.colListEndDate.DataPropertyName = "EndDate";
+            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle8.Format = "dd.MM.yyyy";
+            this.colListEndDate.DefaultCellStyle = dataGridViewCellStyle8;
+            this.colListEndDate.HeaderText = "Дата окончания";
+            this.colListEndDate.Name = "colListEndDate";
+            this.colListEndDate.ReadOnly = true;
+            this.colListEndDate.Width = 65;
+            // 
+            // colListRating
+            // 
+            this.colListRating.DataPropertyName = "Rank";
+            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.colListRating.DefaultCellStyle = dataGridViewCellStyle9;
+            this.colListRating.HeaderText = "Рейтинг";
+            this.colListRating.Name = "colListRating";
+            this.colListRating.ReadOnly = true;
+            this.colListRating.Width = 40;
+            // 
+            // colListPopularity
+            // 
+            this.colListPopularity.DataPropertyName = "Popularity";
+            dataGridViewCellStyle10.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            this.colListPopularity.DefaultCellStyle = dataGridViewCellStyle10;
+            this.colListPopularity.HeaderText = "Популярность";
+            this.colListPopularity.Name = "colListPopularity";
+            this.colListPopularity.ReadOnly = true;
+            this.colListPopularity.Width = 50;
+            // 
             // FormMain
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1664, 1146);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
+            this.ClientSize = new System.Drawing.Size(1522, 1146);
             this.Controls.Add(this.scMain);
             this.Controls.Add(this.msMain);
             this.Controls.Add(this.statusStrip1);
@@ -732,21 +735,7 @@
         private System.Windows.Forms.DataGridView dgvSearch;
         private System.Windows.Forms.ToolStrip tsList;
         private System.Windows.Forms.ToolStripComboBox tscbShowList;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListUserStatus;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListUserScore;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListScore;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListType;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListUserProgress;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListUserStartDate;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListUserEndDate;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListDays;
         private UserControlAnimeInfo pAnimeInfo;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListQuantity;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListStartDate;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListEndDate;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListRating;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colListPopularity;
         private System.Windows.Forms.ToolStripTextBox tstbFilter;
         private System.Windows.Forms.ToolStrip tsSearch;
         private System.Windows.Forms.ToolStripButton tsbStartSearch;
@@ -757,6 +746,20 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colRelatedType;
         private System.Windows.Forms.DataGridViewTextBoxColumn colRelatedStart;
         private System.Windows.Forms.DataGridViewTextBoxColumn colRelatedEnd;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListUserStatus;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListUserScore;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListScore;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListType;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListUserProgress;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListUserStartDate;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListUserEndDate;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListDays;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListQuantity;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListStartDate;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListEndDate;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListRating;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colListPopularity;
     }
 }
 

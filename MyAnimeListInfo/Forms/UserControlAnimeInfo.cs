@@ -15,7 +15,7 @@ namespace MyAnimeListInfo
     {
         AnimeRecord _record = null;
         BackgroundWorker bgwImageLoader;
-        AnimeRecordCollection _animeList;
+        //AnimeRecordCollection _animeList;
 
         public UserControlAnimeInfo()
         {
@@ -31,9 +31,8 @@ namespace MyAnimeListInfo
             bgwImageLoader.RunWorkerCompleted += BgwImageLoader_RunWorkerCompleted;
         }
 
-        public void SetAnime(AnimeRecordCollection animeList, AnimeRecord record)
+        public void SetAnime(AnimeRecord record)
         {
-            _animeList = animeList;
             if (_record == record)
                 Refresh(true);
             else
@@ -122,15 +121,21 @@ namespace MyAnimeListInfo
                 if (relatedAnime == null)
                     return;
 
-                if (relatedAnime.AnimeRecord == null)
-                {
-                    relatedAnime.AnimeRecord = new AnimeRecord() { Id = relatedAnime.Id };
-                    HtmlHelper.GetAnimeInfo(relatedAnime.AnimeRecord, _animeList);
-                }
-
-                FormAnimeInfo form = new FormAnimeInfo(relatedAnime.AnimeRecord, _animeList);
-                form.Show();
+                ShowAnimeWindowAsync(relatedAnime.Id);
             }
+        }
+
+        private async void ShowAnimeWindowAsync(int id)
+        {
+            AnimeRecord anime = AnimeRecordCollection.Get(id);
+            if (anime == null)
+            {
+                anime = new AnimeRecord() { Id = id };
+                await Task.Run(() => HtmlHelper.GetAnimeInfo(anime));
+            }
+
+            FormAnimeInfo form = new FormAnimeInfo(anime);
+            form.Show();
         }
 
         private void dgvRecommended_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
@@ -138,7 +143,7 @@ namespace MyAnimeListInfo
             if (dgvRecommended.SelectedRows.Count > 0 && dgvRecommended.SelectedRows[0].Index != -1)
             {
                 RecommendedAnime recAnime = dgvRecommended.SelectedRows[0].DataBoundItem as RecommendedAnime;
-                new FormRecommendedAnime(recAnime, _animeList).Show();
+                new FormRecommendedAnime(recAnime).Show();
             }
         }
 
@@ -154,7 +159,7 @@ namespace MyAnimeListInfo
                 _record.UserStatus = UserStatus.Planned;
                 HtmlHelper.ChangeAnime(ChangeAnimeAction.Add, _record, Settings.Load().Username, FormMain.Password);
                 Refresh();
-                _animeList.AddAndSave(_record);
+                AnimeRecordCollection.AddAndSave(_record);
             }
             catch (Exception ex)
             {
@@ -178,7 +183,7 @@ namespace MyAnimeListInfo
             {
                 HtmlHelper.ChangeAnime(action, _record, Settings.Load().Username, FormMain.Password);
                 Refresh();
-                _animeList.Save();
+                AnimeRecordCollection.Save();
             }
             catch (Exception ex)
             {
@@ -201,7 +206,7 @@ namespace MyAnimeListInfo
                 _record.UserScore = 0;
                 _record.Watched = 0;
                 Refresh();
-                _animeList.DeleteAndSave(_record);
+                AnimeRecordCollection.DeleteAndSave(_record);
             }
             catch (Exception ex)
             {
@@ -238,7 +243,7 @@ namespace MyAnimeListInfo
             {
                 HtmlHelper.ChangeAnime(ChangeAnimeAction.Update, _record, Settings.Load().Username, FormMain.Password);
                 Refresh();
-                _animeList.Save();
+                AnimeRecordCollection.Save();
             }
             catch (Exception ex)
             {
@@ -253,8 +258,8 @@ namespace MyAnimeListInfo
 
         private void tsbRefresh_Click(object sender, EventArgs e)
         {
-            HtmlHelper.GetAnimeInfo(_record, _animeList);
-            _animeList.Save();
+            HtmlHelper.GetAnimeInfo(_record);
+            AnimeRecordCollection.Save();
             Refresh();
         }
 

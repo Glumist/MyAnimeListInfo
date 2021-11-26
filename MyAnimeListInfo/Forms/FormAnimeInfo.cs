@@ -12,13 +12,13 @@ namespace MyAnimeListInfo
 {
     public partial class FormAnimeInfo : Form
     {
-        public FormAnimeInfo(AnimeRecord record, AnimeRecordCollection animeList)
+        public FormAnimeInfo(AnimeRecord record)
         {
             InitializeComponent();
             UserControlAnimeInfo animeInfo = new UserControlAnimeInfo();
             Controls.Add(animeInfo);
             animeInfo.Dock = DockStyle.Fill;
-            animeInfo.SetAnime(animeList, record);
+            animeInfo.SetAnime(record);
         }
     }
 }
