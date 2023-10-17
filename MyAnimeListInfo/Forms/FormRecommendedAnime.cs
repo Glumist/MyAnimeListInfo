@@ -25,13 +25,15 @@ namespace MyAnimeListInfo
             else
                 LoadAnime(recAnime.Id);
 
-            dataGridView1.DataSource = new List<Recommendation>(_recAnime.Recommendations);
+            //dataGridView1.DataSource = new List<Recommendation>(_recAnime.Recommendations);
         }
 
         private async void LoadAnime(int id)
         {
             AnimeRecord anime = new AnimeRecord() { Id = id };
-            await Task.Run(() => HtmlHelper.GetAnimeInfo(anime));
+            await MalHelper.UpdateAnime(anime);
+            AnimeRecordCollection.AddRelated(anime);
+            //await Task.Run(() => HtmlHelper.GetAnimeInfo(anime));
             animeInfo.SetAnime(anime);
         }
     }

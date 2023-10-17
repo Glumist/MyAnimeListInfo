@@ -8,13 +8,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Diagnostics;
 
 namespace MyAnimeListInfo
 {
     public partial class UserControlAnimeInfo : UserControl
     {
         AnimeRecord _record = null;
-        BackgroundWorker bgwImageLoader;
+        //BackgroundWorker bgwImageLoader;
         //AnimeRecordCollection _animeList;
 
         public UserControlAnimeInfo()
@@ -26,9 +27,9 @@ namespace MyAnimeListInfo
             dgvRecommended.AutoGenerateColumns = false;
             dgvGenres.AutoGenerateColumns = false;
 
-            bgwImageLoader = new BackgroundWorker();
+            /*bgwImageLoader = new BackgroundWorker();
             bgwImageLoader.DoWork += BgwImageLoader_DoWork;
-            bgwImageLoader.RunWorkerCompleted += BgwImageLoader_RunWorkerCompleted;
+            bgwImageLoader.RunWorkerCompleted += BgwImageLoader_RunWorkerCompleted;*/
         }
 
         public void SetAnime(AnimeRecord record)
@@ -73,7 +74,16 @@ namespace MyAnimeListInfo
                 if (File.Exists(fileName))
                     SetImage(Image.FromFile(fileName));
                 else
-                    bgwImageLoader.RunWorkerAsync(_record);
+                    Task.Factory.StartNew(async () => {
+                        if (!string.IsNullOrWhiteSpace(_record.ImageAddress) && _record.Id > 0)
+                        {
+                            await HtmlHelper.DownloadAnimeImage(_record.ImageAddress, GetFilename(_record.Id));
+                            SetImage(Image.FromFile(GetFilename(_record.Id)));
+                        }
+                        //await MalHelper.UpdateAnime(animeRecord);
+                        //tlvTree.RefreshObject(record);
+                    });
+                //bgwImageLoader.RunWorkerAsync(_record);
             }
         }
 
@@ -84,15 +94,22 @@ namespace MyAnimeListInfo
             scTabs.SplitterDistance = image.Height;
         }
 
-        private void BgwImageLoader_DoWork(object sender, DoWorkEventArgs e)
+        /*private async void BgwImageLoader_DoWork(object sender, DoWorkEventArgs e)
         {
             if (e.Argument != null && e.Argument is AnimeRecord)
             {
-                AnimeRecord record = e.Argument as AnimeRecord;
-                if (!string.IsNullOrWhiteSpace(record.ImageAddress) && record.Id > 0)
+                try
                 {
-                    HtmlHelper.DownloadAnimeImage(record.ImageAddress, GetFilename(record.Id));
-                    e.Result = record;
+                    AnimeRecord record = e.Argument as AnimeRecord;
+                    if (!string.IsNullOrWhiteSpace(record.ImageAddress) && record.Id > 0)
+                    {
+                        await HtmlHelper.DownloadAnimeImage(record.ImageAddress, GetFilename(record.Id));
+                        e.Result = record;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message+ex.StackTrace);
                 }
             }
         }
@@ -101,7 +118,7 @@ namespace MyAnimeListInfo
         {
             if (e.Result is AnimeRecord)
                 SetImage(Image.FromFile(GetFilename((e.Result as AnimeRecord).Id)));
-        }
+        }*/
 
         private string GetPicDirectory()
         {
@@ -131,7 +148,9 @@ namespace MyAnimeListInfo
             if (anime == null)
             {
                 anime = new AnimeRecord() { Id = id };
-                await Task.Run(() => HtmlHelper.GetAnimeInfo(anime));
+                await MalHelper.UpdateAnime(anime);
+                AnimeRecordCollection.AddRelated(anime);
+                //await Task.Run(() => HtmlHelper.GetAnimeInfo(anime));
             }
 
             FormAnimeInfo form = new FormAnimeInfo(anime);
@@ -140,24 +159,25 @@ namespace MyAnimeListInfo
 
         private void dgvRecommended_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (dgvRecommended.SelectedRows.Count > 0 && dgvRecommended.SelectedRows[0].Index != -1)
+            /*if (dgvRecommended.SelectedRows.Count > 0 && dgvRecommended.SelectedRows[0].Index != -1)
             {
                 RecommendedAnime recAnime = dgvRecommended.SelectedRows[0].DataBoundItem as RecommendedAnime;
                 new FormRecommendedAnime(recAnime).Show();
-            }
+            }*/
         }
 
         #region Menu
 
-        private void tsbAdd_Click(object sender, EventArgs e)
+        private async void tsbAdd_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(FormMain.Password))
-                return;
+            //if (string.IsNullOrWhiteSpace(FormMain.Password))
+            //    return;
 
             try
             {
                 _record.UserStatus = UserStatus.Planned;
-                HtmlHelper.ChangeAnime(ChangeAnimeAction.Add, _record, Settings.Load().Username, FormMain.Password);
+                await MalHelper.AddAnime(_record.Id);
+                //HtmlHelper.ChangeAnime(ChangeAnimeAction.Add, _record, Settings.Load().Username, FormMain.Password);
                 Refresh();
                 AnimeRecordCollection.AddAndSave(_record);
             }
@@ -168,20 +188,21 @@ namespace MyAnimeListInfo
             }
         }
 
-        private void tsbEdit_Click(object sender, EventArgs e)
+        private async void tsbEdit_Click(object sender, EventArgs e)
         {
             FormAnimeEdit form = new FormAnimeEdit(_record);
             if (form.ShowDialog() != DialogResult.OK)
                 return;
 
-            ChangeAnimeAction action = _record.UserStatus == UserStatus.Unknown ? ChangeAnimeAction.Delete : ChangeAnimeAction.Update;
+            //ChangeAnimeAction action = _record.UserStatus == UserStatus.Unknown ? ChangeAnimeAction.Delete : ChangeAnimeAction.Update;
             
-            if (string.IsNullOrWhiteSpace(FormMain.Password))
-                return;
+            //if (string.IsNullOrWhiteSpace(FormMain.Password))
+            //    return;
 
             try
             {
-                HtmlHelper.ChangeAnime(action, _record, Settings.Load().Username, FormMain.Password);
+                await MalHelper.ChangeAnime(_record);
+                //HtmlHelper.ChangeAnime(action, _record, Settings.Load().Username, FormMain.Password);
                 Refresh();
                 AnimeRecordCollection.Save();
             }
@@ -192,14 +213,15 @@ namespace MyAnimeListInfo
             }
         }
 
-        private void tsbDelete_Click(object sender, EventArgs e)
+        private async void tsbDelete_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(FormMain.Password))
-                return;
+            //if (string.IsNullOrWhiteSpace(FormMain.Password))
+            //    return;
 
             try
             {
-                HtmlHelper.ChangeAnime(ChangeAnimeAction.Delete, _record, Settings.Load().Username, FormMain.Password);
+                await MalHelper.DeleteAnime(_record.Id);
+                //HtmlHelper.ChangeAnime(ChangeAnimeAction.Delete, _record, Settings.Load().Username, FormMain.Password);
                 _record.UserStatus = UserStatus.Unknown;
                 _record.UserStartDate = null;
                 _record.UserEndDate = null;
@@ -214,13 +236,13 @@ namespace MyAnimeListInfo
             }
         }
 
-        private void tsbAddWatched_Click(object sender, EventArgs e)
+        private async void tsbAddWatched_Click(object sender, EventArgs e)
         {
             if (_record.Quantity != 0 && _record.Quantity <= _record.Watched)
                 return;
             
-            if (string.IsNullOrWhiteSpace(FormMain.Password))
-                return;
+            //if (string.IsNullOrWhiteSpace(FormMain.Password))
+            //    return;
 
             UserStatus oldStatus = _record.UserStatus;
             DateTime? oldStart = _record.UserStartDate;
@@ -241,7 +263,8 @@ namespace MyAnimeListInfo
 
             try
             {
-                HtmlHelper.ChangeAnime(ChangeAnimeAction.Update, _record, Settings.Load().Username, FormMain.Password);
+                await MalHelper.ChangeAnime(_record);
+                //HtmlHelper.ChangeAnime(ChangeAnimeAction.Update, _record, Settings.Load().Username, FormMain.Password);
                 Refresh();
                 AnimeRecordCollection.Save();
             }
@@ -256,16 +279,19 @@ namespace MyAnimeListInfo
             }
         }
 
-        private void tsbRefresh_Click(object sender, EventArgs e)
+        private async void tsbRefresh_Click(object sender, EventArgs e)
         {
-            HtmlHelper.GetAnimeInfo(_record);
-            AnimeRecordCollection.Save();
+            //HtmlHelper.GetAnimeInfo(_record);
+            await MalHelper.UpdateAnime(_record);
+            if (AnimeRecordCollection.Have(_record.Id))
+                AnimeRecordCollection.Save();
             Refresh();
         }
 
         private void tsbOpenInBrowser_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start(HtmlHelper.AnimeInfoAddress + _record.Id);
+            Process.Start(new ProcessStartInfo(HtmlHelper.AnimeInfoAddress + _record.Id) { UseShellExecute = true });
+            //System.Diagnostics.Process.Start(HtmlHelper.AnimeInfoAddress + _record.Id);
         }
 
         #endregion

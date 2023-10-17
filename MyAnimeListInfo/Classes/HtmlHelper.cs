@@ -1,4 +1,4 @@
-﻿using HtmlAgilityPack;
+﻿//using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -16,8 +16,9 @@ namespace MyAnimeListInfo
 {
     public class HtmlHelper
     {
-        public static string GetHtmlString(string url, string login = "", string password = "", Dictionary<string, string> queries = null)
+        /*public static string GetHtmlString(string url, string login = "", string password = "", Dictionary<string, string> queries = null)
         {
+            return "";
             WebClient client = new WebClient();
             if (login != "" && password != "")
                 client.Credentials = new NetworkCredential(login, password);
@@ -55,11 +56,11 @@ namespace MyAnimeListInfo
                 if (node.Attributes.ToList().Exists(a => a.Name == attributeName && a.Value == attributeValue))
                     return node;
             return null;
-        }
+        }*/
 
         #region List
 
-        private const string headerClass = "header_title";
+        /*private const string headerClass = "header_title";
         private const string tableHeaderClass = "table_header";
         private const string animeTitleText = "Anime Title";
         private const string listAddress = "https://myanimelist.net/animelist/";
@@ -242,7 +243,7 @@ namespace MyAnimeListInfo
                         record.UserEndDate = endDate;
                     break;
             }
-        }
+        }*/
 
         #endregion
 
@@ -250,7 +251,7 @@ namespace MyAnimeListInfo
 
         #region List XML
 
-        private const string xmlListAddress = "http://myanimelist.net/malappinfo.php?u=";
+        /*private const string xmlListAddress = "http://myanimelist.net/malappinfo.php?u=";
         private const string xmlListStatus = "&status=all";
 
         public static List<AnimeRecord> GetAnimeListXml(string userName)
@@ -328,13 +329,13 @@ namespace MyAnimeListInfo
                 case "6": return "Plan to Watch";
                 default: return "";
             }
-        }
+        }*/
 
         #endregion
 
         #region Search
 
-        private const string xmlSearchAddress = "https://myanimelist.net/api/anime/search.xml?q=";
+        /*private const string xmlSearchAddress = "https://myanimelist.net/api/anime/search.xml?q=";
 
         public static List<AnimeRecord> SearchForAnime(string text, string login, string password)
         {
@@ -393,13 +394,13 @@ namespace MyAnimeListInfo
                 }
 
             return result;
-        }
+        }*/
 
         #endregion
 
         #region Change
 
-        private const string apiChangeAddress = "https://myanimelist.net/api/animelist/";
+        /*private const string apiChangeAddress = "https://myanimelist.net/api/animelist/";
 
         private static int GetUserStatusInt(UserStatus status)
         {
@@ -471,7 +472,7 @@ namespace MyAnimeListInfo
             queries.Add("data", animeXml);
 
             GetHtmlString(address, login, password, queries);
-        }
+        }*/
 
         #endregion
 
@@ -496,7 +497,7 @@ namespace MyAnimeListInfo
         private const string relatedAnimeClass = "anime_detail_related_anime";
         public const string AnimeInfoAddress = "https://myanimelist.net/anime/";
 
-        public static List<AnimeNews> GetAnimeInfo(AnimeRecord record)
+        /*public static List<AnimeNews> GetAnimeInfo(AnimeRecord record)
         {
             List<AnimeNews> news = new List<AnimeNews>();
             string address = AnimeInfoAddress + record.Id;
@@ -574,21 +575,21 @@ namespace MyAnimeListInfo
                 /*foreach (RecommendedAnime recommendedTitle in recommendedTitles)
                     if (!record.RecommendedAnime.Exists(at => at.Id == recommendedTitle.Id))
                         news.Add(new AnimeNews(record, "Recommended Anime", recommendedTitle.ToString()));*/
-                record.RecommendedAnime = recommendedTitles;
+                /*record.RecommendedAnime = recommendedTitles;
             }
 
             return news;
-        }
+        }*/
 
-        public static void DownloadAnimeImage(string imageAddress, string localAddress)
+        public static async Task DownloadAnimeImage(string imageAddress, string localAddress)
         {
-            using (WebClient client = new WebClient())
-            {
-                client.DownloadFile(imageAddress, localAddress);
-            }
+            using (HttpClient client = new HttpClient())
+                using (var s = await client.GetStreamAsync(imageAddress))
+                    using (var fs = new FileStream(localAddress, FileMode.CreateNew))
+                        await s.CopyToAsync(fs);
         }
 
-        private static string GetMetaProperty(HtmlNode docNode, string propertyName)
+        /*private static string GetMetaProperty(HtmlNode docNode, string propertyName)
         {
             string xpath = "html/head";
             xpath += "/meta[@property='" + propertyName + "']";
@@ -806,18 +807,19 @@ namespace MyAnimeListInfo
 
                 foreach (HtmlNode recNode in recAnimeNode.SelectNodes(".//div[contains(@class,'" + borderClass + "')]"))
                 {
-                    Recommendation rec = new Recommendation();
+                    /*Recommendation rec = new Recommendation();
                     rec.Text = GetInnerText(recNode.Element("div"));
                     rec.Author = GetInnerText(recNode.SelectSingleNode("div/a"));
 
-                    recAnime.Recommendations.Add(rec);
+                    recAnime.Recommendations.Add(rec);*/
+                    /*recAnime.Count++;
                 }
 
                 result.Add(recAnime);
             }
 
             return result;
-        }
+        }*/
 
         #endregion
     }

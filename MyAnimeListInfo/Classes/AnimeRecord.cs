@@ -1,9 +1,9 @@
-﻿using JikanDotNet;
+﻿//using JikanDotNet;
+using MalApi;
+using MyAnimeListInfo.Properties;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Drawing;
 using System.Xml.Serialization;
 
 namespace MyAnimeListInfo
@@ -204,6 +204,7 @@ namespace MyAnimeListInfo
             }
         }
 
+        public Image UserStatusIcon { get { return GetIconByStatus(UserStatus); } }
         public string Duration
         {
             get
@@ -234,24 +235,101 @@ namespace MyAnimeListInfo
             RecommendedAnime = new List<RecommendedAnime>();
         }
 
-        public AnimeRecord(AnimeListEntry animeListEntry)
+        public AnimeRecord(RelatedAnime related)
             : this()
         {
-            Id = (int)animeListEntry.MalId;
+            Id = related.Id;
+            Name = related.Name;
+        }
+
+        /*public AnimeRecord(AnimeListEntry animeListEntry)
+            : this()
+        {
+            Id = (int)animeListEntry.Anime.MalId;
             UserScore = animeListEntry.Score;
-            Watched = animeListEntry.WatchedEpisodes ?? 0;
+            Watched = animeListEntry.EpisodesWatched ?? 0;
             UserStartDate = animeListEntry.WatchStartDate;
             UserEndDate = animeListEntry.WatchEndDate;
             switch (animeListEntry.WatchingStatus)
             {
-                case UserAnimeListExtension.Completed: UserStatus = UserStatus.Completed; break;
-                case UserAnimeListExtension.Dropped: UserStatus = UserStatus.Dropped; break;
-                case UserAnimeListExtension.OnHold: UserStatus = UserStatus.OnHold; break;
-                case UserAnimeListExtension.PlanToWatch: UserStatus = UserStatus.Planned; break;
-                case UserAnimeListExtension.Watching: UserStatus = UserStatus.Watching; break;
+                case UserAnimeWatchingStatus.Completed: UserStatus = UserStatus.Completed; break;
+                case UserAnimeWatchingStatus.Dropped: UserStatus = UserStatus.Dropped; break;
+                case UserAnimeWatchingStatus.OnHold: UserStatus = UserStatus.OnHold; break;
+                case UserAnimeWatchingStatus.PlanToWatch: UserStatus = UserStatus.Planned; break;
+                case UserAnimeWatchingStatus.Watching: UserStatus = UserStatus.Watching; break;
+                default: UserStatus = UserStatus.Unknown; break;
+            }
+        }*/
+
+        /*public AnimeRecord(MALAPI.Dto.AnimeListEntry animeEntry)
+            : this()
+        {
+            Id = animeEntry.MyId;
+            UserEndDate = (animeEntry.MyEndDate.Ticks != 0 ? animeEntry.MyEndDate : null);
+            UserStartDate = (animeEntry.MyStartDate.Ticks != 0 ? animeEntry.MyEndDate : null);
+            UserScore = animeEntry.MyScoreInt;
+            Watched = animeEntry.MyWatchedEpisodesCount;
+            switch (animeEntry.MyStatus)
+            {
+                case MALAPI.AnimeListStatus.Completed: UserStatus = UserStatus.Completed; break;
+                case MALAPI.AnimeListStatus.Dropped: UserStatus = UserStatus.Dropped; break;
+                case MALAPI.AnimeListStatus.Onhold: UserStatus = UserStatus.OnHold; break;
+                case MALAPI.AnimeListStatus.PlanToWatch: UserStatus = UserStatus.Planned; break;
+                case MALAPI.AnimeListStatus.Watching: UserStatus = UserStatus.Watching; break;
+                default: UserStatus = UserStatus.Unknown; break;
+            }
+        }*/
+
+        public AnimeRecord(MalApi.Anime animeEntry)
+            : this()
+        {
+            Id = animeEntry.Id;
+            UserEndDate = (animeEntry.UserStatus.FinishDate.Ticks != 0 ? animeEntry.UserStatus.FinishDate : null);
+            UserStartDate = (animeEntry.UserStatus.StartDate.Ticks != 0 ? animeEntry.UserStatus.StartDate : null);
+            Watched = animeEntry.UserStatus.WatchedEpisodes;
+            switch (animeEntry.UserStatus.Score)
+            {
+                case MalApi.Score.Masterpiece: UserScore = 10; break;
+                case MalApi.Score.Great: UserScore = 9; break;
+                case MalApi.Score.VeryGood: UserScore = 8; break;
+                case MalApi.Score.Good: UserScore = 7; break;
+                case MalApi.Score.Fine: UserScore = 6; break;
+                case MalApi.Score.Average: UserScore = 5; break;
+                case MalApi.Score.Bad: UserScore = 4; break;
+                case MalApi.Score.VeryBad: UserScore = 3; break;
+                case MalApi.Score.Horrible: UserScore = 2; break;
+                case MalApi.Score.Appalling: UserScore = 1; break;
+                default: UserScore = 0; break;
+            }
+            switch (animeEntry.UserStatus.Status)
+            {
+                case MalApi.AnimeStatus.Completed: UserStatus = UserStatus.Completed; break;
+                case MalApi.AnimeStatus.Dropped: UserStatus = UserStatus.Dropped; break;
+                case MalApi.AnimeStatus.OnHold: UserStatus = UserStatus.OnHold; break;
+                case MalApi.AnimeStatus.PlanToWatch: UserStatus = UserStatus.Planned; break;
+                case MalApi.AnimeStatus.Watching: UserStatus = UserStatus.Watching; break;
                 default: UserStatus = UserStatus.Unknown; break;
             }
         }
+
+        /*public AnimeRecord(MyAnimeListEntry animeEntry)
+            : this()
+        {
+            Id = animeEntry.AnimeInfo.AnimeId;
+            UserEndDate = animeEntry.MyFinishDate.ToDateTime();
+            UserStartDate = animeEntry.MyStartDate.ToDateTime();
+            Watched = animeEntry.NumEpisodesWatched;
+            UserScore = (int)animeEntry.Score;
+            switch (animeEntry.Status)
+            {
+                case CompletionStatus.Completed: UserStatus = UserStatus.Completed; break;
+                case CompletionStatus.Dropped: UserStatus = UserStatus.Dropped; break;
+                case CompletionStatus.OnHold: UserStatus = UserStatus.OnHold; break;
+                case CompletionStatus.PlanToWatch: UserStatus = UserStatus.Planned; break;
+                case CompletionStatus.Watching: UserStatus = UserStatus.Watching; break;
+                default: UserStatus = UserStatus.Unknown; break;
+            }
+        }*/
 
         public bool CopyUserInfo(AnimeRecord record)
         {
@@ -369,7 +447,7 @@ namespace MyAnimeListInfo
             return updated;
         }
 
-        public bool CopyAnimeInfo(Anime record)
+        /*public bool CopyAnimeInfo(AnimeFull record)
         {
             bool updated = false;
 
@@ -385,12 +463,9 @@ namespace MyAnimeListInfo
                 updated = true;
             }
 
-            int episodes = 0;
-            if (!string.IsNullOrWhiteSpace(record.Episodes))
-                episodes = int.Parse(record.Episodes);
-            if (Quantity != episodes)
+            if (record.Episodes.HasValue && Quantity != record.Episodes.Value)
             {
-                Quantity = episodes;
+                Quantity = record.Episodes.Value;
                 updated = true;
             }
 
@@ -429,7 +504,7 @@ namespace MyAnimeListInfo
                 updated = true;
             }
 
-            List<RelatedAnime> newRelated = MyAnimeListInfo.RelatedAnime.GetRelatedAnimes(record.Related);
+            List<RelatedAnime> newRelated = MyAnimeListInfo.RelatedAnime.GetRelatedAnimes(record.Relations);
             if (MyAnimeListInfo.RelatedAnime.Equals(RelatedAnime, newRelated))
             {
                 RelatedAnime = newRelated;
@@ -437,7 +512,7 @@ namespace MyAnimeListInfo
             }
 
             List<string> newGenres = new List<string>();
-            foreach (MALSubItem genre in record.Genres)
+            foreach (MalUrl genre in record.Genres)
                 newGenres.Add(genre.Name);
             if (Genres != newGenres)
             {
@@ -445,9 +520,9 @@ namespace MyAnimeListInfo
                 updated = true;
             }
 
-            if (ImageAddress != record.ImageURL)
+            if (ImageAddress != record.Images.JPG.ImageUrl)
             {
-                ImageAddress = record.ImageURL;
+                ImageAddress = record.Images.JPG.ImageUrl;
                 updated = true;
             }
 
@@ -458,11 +533,144 @@ namespace MyAnimeListInfo
             }
 
             return updated;
+        }*/
+
+        public List<AnimeNews> CopyAnimeInfo(MalApi.Anime record)
+        {
+            //bool updated = false;
+            List<AnimeNews> news = new List<AnimeNews>();
+
+            if (Name != record.Title)
+            {
+                Name = record.Title;
+                news.Add(new AnimeNews(this, "Name", Name));
+            }
+
+            string type = "" + record.MediaType;
+            if (!string.IsNullOrWhiteSpace(type) && Type != type)
+            {
+                Type = type;
+                news.Add(new AnimeNews(this, "Type", Type));
+            }
+
+            if (record.TotalEpisodes.HasValue && Quantity != record.TotalEpisodes.Value)
+            {
+                Quantity = record.TotalEpisodes.Value;
+                news.Add(new AnimeNews(this, "Quantity", "" + Quantity));
+            }
+
+            string status = "" + record.Status;
+            if (!string.IsNullOrWhiteSpace(status) && Status != status)
+            {
+                Status = status;
+                news.Add(new AnimeNews(this, "Status", Status));
+            }
+
+            if (!string.IsNullOrWhiteSpace(record.StartDate))
+                if (DateTime.TryParse(record.StartDate, out DateTime startDate))
+                    if (StartDate != startDate)
+                    {
+                        StartDate = startDate;
+                        news.Add(new AnimeNews(this, "StartDate", startDate.ToShortDateString()));
+                    }
+
+            if (!string.IsNullOrWhiteSpace(record.EndDate))
+                if (DateTime.TryParse(record.EndDate, out DateTime endDate))
+                    if (EndDate != endDate)
+                    {
+                        EndDate = endDate;
+                        news.Add(new AnimeNews(this, "EndDate", endDate.ToShortDateString()));
+                    }
+
+            if (EpisodeDuration != "" + record.AverageEpisodeDuration / 60)
+            {
+                EpisodeDuration = "" + (record.AverageEpisodeDuration / 60);
+            }
+
+            List<AlternativeTitle> newTitles = new List<AlternativeTitle>();
+            newTitles.Add(new AlternativeTitle() { Language = "English", Title = record.AlternativeTitles.English ?? "" });
+            newTitles.Add(new AlternativeTitle() { Language = "Japanese", Title = record.AlternativeTitles.Japanese ?? "" });
+            foreach (string title in record.AlternativeTitles.Aliases)
+                newTitles.Add(new AlternativeTitle() { Language = "", Title = title });
+            if (!AlternativeTitle.Equals(AlternativeTitles, newTitles))
+            {
+                foreach (AlternativeTitle altTitle in newTitles)
+                    if (!AlternativeTitles.Exists(at => at.Title == altTitle.Title && at.Language == altTitle.Language))
+                        news.Add(new AnimeNews(this, "Alternative Title", altTitle.ToString()));
+                AlternativeTitles = newTitles;
+            }
+
+            List<RelatedAnime> newRelated = MyAnimeListInfo.RelatedAnime.GetRelatedAnimes(record.RelatedAnime);
+            if (!MyAnimeListInfo.RelatedAnime.Equals(RelatedAnime, newRelated))
+            {
+                foreach (RelatedAnime relatedTitle in newRelated)
+                    if (!RelatedAnime.Exists(at => at.Id == relatedTitle.Id))
+                        news.Add(new AnimeNews(this, "Related Anime", relatedTitle.ToString()));
+                RelatedAnime = newRelated;
+            }
+
+            List<RecommendedAnime> newRecommended = MyAnimeListInfo.RecommendedAnime.GetRecommendedAnimes(record.Recommendations);
+            if (!MyAnimeListInfo.RecommendedAnime.Equals(RecommendedAnime, newRecommended))
+            {
+                RecommendedAnime = newRecommended;
+            }
+
+            List<string> newGenres = new List<string>();
+            foreach (MalApi.Genre genre in record.Genres)
+                newGenres.Add(genre.Name);
+            if (Genres != newGenres)
+            {
+                //foreach (string genre in newGenres)
+                //    if (!Genres.Contains(genre))
+                //        news.Add(new AnimeNews(this, "Genre", genre));
+                Genres = newGenres;
+            }
+
+            if (ImageAddress != record.MainPicture.Medium)
+            {
+                ImageAddress = record.MainPicture.Medium;
+                //news.Add(new AnimeNews(this, "ImageAddress", ""));
+            }
+
+            if (Synopsis != record.Synopsis)
+            {
+                Synopsis = record.Synopsis;
+            }
+
+            if (record.Rank.HasValue && Rank != record.Rank.Value)
+            {
+                Rank = record.Rank.Value;
+            }
+
+            if (record.MeanScore.HasValue && Score != record.MeanScore.Value)
+            {
+                Score = record.MeanScore.Value;
+            }
+
+            if (record.Popularity.HasValue && Popularity != record.Popularity.Value)
+            {
+                Popularity = record.Popularity.Value;
+            }
+
+            return news;
         }
 
         public override string ToString()
         {
             return Name;
+        }
+
+        public static Image GetIconByStatus(UserStatus status)
+        {
+            switch (status)
+            {
+                case UserStatus.Watching: return Resources.IconPlay;
+                case UserStatus.Completed: return Resources.IconApply;
+                case UserStatus.Dropped: return Resources.action_delete_sharp_thick;
+                case UserStatus.OnHold: return Resources.iconClock;
+                case UserStatus.Planned: return Resources.IconPlus;
+                default: return Resources.IconQuestion;
+            }
         }
 
         #region Compare
@@ -541,10 +749,19 @@ namespace MyAnimeListInfo
             set { _animeDictionary = value; }
         }
 
+        private Dictionary<int, AnimeRecord> _relatedAnimeDictionary;
+        [XmlIgnore]
+        public Dictionary<int, AnimeRecord> RelatedAnimeDictionary
+        {
+            get { return _relatedAnimeDictionary; }
+            set { _relatedAnimeDictionary = value; }
+        }
+
         private AnimeRecordCollection()
         {
             AnimeList = new List<AnimeRecord>();
             AnimeDictionary = new Dictionary<int, AnimeRecord>();
+            RelatedAnimeDictionary = new Dictionary<int, AnimeRecord>();
         }
 
         public static AnimeRecordCollection GetInstance()
@@ -560,7 +777,7 @@ namespace MyAnimeListInfo
 
             foreach (AnimeRecord record in animeRecords)
             {
-                if (!GetInstance().AnimeDictionary.ContainsKey(record.Id))
+                if (!Have(record.Id))
                 {
                     GetInstance().AnimeList.Add(record);
                     GetInstance().AnimeDictionary.Add(record.Id, record);
@@ -594,7 +811,14 @@ namespace MyAnimeListInfo
         {
             if (GetInstance().AnimeDictionary.ContainsKey(id))
                 return GetInstance().AnimeDictionary[id];
+            else if (GetInstance().RelatedAnimeDictionary.ContainsKey(id))
+                return GetInstance().RelatedAnimeDictionary[id];
             return null;
+        }
+
+        public static bool Have(int id)
+        { 
+            return GetInstance().AnimeDictionary.ContainsKey(id);
         }
 
         public static int Count
@@ -604,7 +828,7 @@ namespace MyAnimeListInfo
 
         public static void AddAndSave(AnimeRecord record)
         {
-            if (Get(record.Id) != null)
+            if (Have(record.Id))
                 return;
 
             GetInstance().AnimeList.Add(record);
@@ -615,13 +839,19 @@ namespace MyAnimeListInfo
 
         public static void DeleteAndSave(AnimeRecord record)
         {
-            if (Get(record.Id) == null)
+            if (!Have(record.Id))
                 return;
 
             GetInstance().AnimeList.Remove(record);
             GetInstance().AnimeDictionary.Remove(record.Id);
 
             Save();
+        }
+
+        public static void AddRelated(AnimeRecord record)
+        {
+            if (!GetInstance().RelatedAnimeDictionary.ContainsKey(record.Id))
+                GetInstance().RelatedAnimeDictionary.Add(record.Id, record);
         }
 
         public static List<AnimeRecord> SelectNotInList(List<AnimeRecord> records)
@@ -633,19 +863,20 @@ namespace MyAnimeListInfo
             return newRecords;
         }
 
-        public static List<AnimeListEntry> SelectNotInList(ICollection<AnimeListEntry> records)
+        /*public static List<AnimeListEntry> SelectNotInList(ICollection<AnimeListEntry> records)
         {
             List<AnimeListEntry> newRecords = new List<AnimeListEntry>();
             foreach (AnimeListEntry record in records)
-                if (!GetInstance().AnimeDictionary.ContainsKey((int)record.MalId))
+                if (!GetInstance().AnimeDictionary.ContainsKey((int)record.Anime.MalId))
                     newRecords.Add(record);
             return newRecords;
-        }
+        }*/
 
         public static void Clear()
         {
             GetInstance().AnimeList.Clear();
             GetInstance().AnimeDictionary.Clear();
+            GetInstance().RelatedAnimeDictionary.Clear();
         }
 
         public static void Save()
@@ -700,7 +931,7 @@ namespace MyAnimeListInfo
 
         public override string ToString()
         {
-            return _language + ": " + _title;
+            return Language + ": " + Title;
         }
 
         public static bool Equals(List<AlternativeTitle> a, List<AlternativeTitle> b)
@@ -739,14 +970,30 @@ namespace MyAnimeListInfo
             set { _relation = value; }
         }
 
+        public DateTime? StartDate { get { return AnimeRecord != null ? AnimeRecord.StartDate : null; } }
+
+        public DateTime? EndDate { get { return AnimeRecord != null ? AnimeRecord.EndDate : null; } }
+
+        public string Type { get { return AnimeRecord != null ? AnimeRecord.Type : ""; } }
+
+        public Image UserStatusIcon { get { return AnimeRecord != null ? AnimeRecord.UserStatusIcon : Resources.IconQuestion; } }
+
         public RelatedAnime() { }
 
-        public RelatedAnime(MALSubItem mALSubItem, string relation)
+        /*public RelatedAnime(MalUrl mALUrl, string relation)
             : this()
         {
-            Id = (int)mALSubItem.MalId;
-            Name = mALSubItem.Name;
+            Id = (int)mALUrl.MalId;
+            Name = mALUrl.Name;
             Relation = relation;
+        }*/
+
+        public RelatedAnime(MalApi.RelatedAnime related)
+            : this()
+        {
+            Id = related.Anime.Id;
+            Name = related.Anime.Title;
+            Relation = related.RelationTypeFormatted;
         }
 
         public override string ToString()
@@ -776,48 +1023,21 @@ namespace MyAnimeListInfo
             return true;
         }
 
-        public static List<RelatedAnime> GetRelatedAnimes(JikanDotNet.RelatedAnime relatedList)
+        /*public static List<RelatedAnime> GetRelatedAnimes(ICollection<JikanDotNet.RelatedEntry> relatedList)
         {
             List<RelatedAnime> result = new List<RelatedAnime>();
-            if (relatedList.Adaptations != null)
-                foreach (MALSubItem related in relatedList.Adaptations)
-                    result.Add(new RelatedAnime(related, "Adaptation"));
-            if (relatedList.AlternativeSettings != null)
-                foreach (MALSubItem related in relatedList.AlternativeSettings)
-                    result.Add(new RelatedAnime(related, "AlternativeSetting"));
-            if (relatedList.AlternativeVersions != null)
-                foreach (MALSubItem related in relatedList.AlternativeVersions)
-                    result.Add(new RelatedAnime(related, "AlternativeVersion"));
-            if (relatedList.Characters != null)
-                foreach (MALSubItem related in relatedList.Characters)
-                    result.Add(new RelatedAnime(related, "Character"));
-            if (relatedList.FullStories != null)
-                foreach (MALSubItem related in relatedList.FullStories)
-                    result.Add(new RelatedAnime(related, "FullStory"));
-            if (relatedList.Others != null)
-                foreach (MALSubItem related in relatedList.Others)
-                    result.Add(new RelatedAnime(related, "Other"));
-            if (relatedList.ParentStories != null)
-                foreach (MALSubItem related in relatedList.ParentStories)
-                    result.Add(new RelatedAnime(related, "ParentStory"));
-            if (relatedList.ParentStories != null)
-                foreach (MALSubItem related in relatedList.ParentStories)
-                    result.Add(new RelatedAnime(related, "ParentStory"));
-            if (relatedList.Prequels != null)
-                foreach (MALSubItem related in relatedList.Prequels)
-                    result.Add(new RelatedAnime(related, "Prequel"));
-            if (relatedList.Sequels != null)
-                foreach (MALSubItem related in relatedList.Sequels)
-                    result.Add(new RelatedAnime(related, "Sequel"));
-            if (relatedList.SideStories != null)
-                foreach (MALSubItem related in relatedList.SideStories)
-                    result.Add(new RelatedAnime(related, "SideStory"));
-            if (relatedList.SpinOffs != null)
-                foreach (MALSubItem related in relatedList.SpinOffs)
-                    result.Add(new RelatedAnime(related, "SpinOff"));
-            if (relatedList.Summaries != null)
-                foreach (MALSubItem related in relatedList.Summaries)
-                    result.Add(new RelatedAnime(related, "Summary"));
+            foreach (RelatedEntry related in relatedList)
+                foreach (MalUrl entry in related.Entry)
+                    result.Add(new RelatedAnime(entry, related.Relation));
+
+            return result;
+        }*/
+
+        public static List<RelatedAnime> GetRelatedAnimes(MalApi.RelatedAnime[] relatedList)
+        {
+            List<RelatedAnime> result = new List<RelatedAnime>();
+            foreach (MalApi.RelatedAnime related in relatedList)
+                result.Add(new RelatedAnime(related));
 
             return result;
         }
@@ -839,18 +1059,35 @@ namespace MyAnimeListInfo
             set { _name = value; }
         }
 
-        private List<Recommendation> _recommendations;
+        /*private List<Recommendation> _recommendations;
         public List<Recommendation> Recommendations
         {
             get { return _recommendations; }
             set { _recommendations = value; }
         }
 
-        public int RecommendationsCount { get { return Recommendations.Count; } }
+        public int RecommendationsCount { get { return Recommendations.Count; } }*/
+
+        private int _count = 0;
+        public int Count
+        {
+            get => _count;
+            set => _count = value;
+        }
+
+        public Image UserStatusIcon { get { return AnimeRecord != null ? AnimeRecord.UserStatusIcon : Resources.IconQuestion; } }
 
         public RecommendedAnime()
         {
-            Recommendations = new List<Recommendation>();
+            //Recommendations = new List<Recommendation>();
+        }
+
+        public RecommendedAnime(MalApi.AnimeRecommendations recommendation)
+            : this()
+        {
+            Id = recommendation.Anime.Id;
+            Name = recommendation.Anime.Title;
+            Count = recommendation.NumberOfRecommendations;
         }
 
         public override string ToString()
@@ -867,21 +1104,30 @@ namespace MyAnimeListInfo
 
         public UserStatus UserStatus { get { return AnimeRecord != null ? AnimeRecord.UserStatus : MyAnimeListInfo.UserStatus.Unknown; } }
 
-        public static bool Equals(List<RelatedAnime> a, List<RelatedAnime> b)
+        public static List<RecommendedAnime> GetRecommendedAnimes(MalApi.AnimeRecommendations[] recommendations)
         {
-            foreach (RelatedAnime ra in a)
-                if (!b.Exists(rb => rb.Id == ra.Id && rb.Name == ra.Name && rb.Relation == ra.Relation))
+            List<RecommendedAnime> result = new List<RecommendedAnime>();
+            foreach (MalApi.AnimeRecommendations recommendation in recommendations)
+                result.Add(new RecommendedAnime(recommendation));
+
+            return result;
+        }
+
+        public static bool Equals(List<RecommendedAnime> a, List<RecommendedAnime> b)
+        {
+            foreach (RecommendedAnime ra in a)
+                if (!b.Exists(rb => rb.Id == ra.Id && rb.Name == ra.Name && rb.Count == ra.Count))
                     return false;
 
-            foreach (RelatedAnime rb in b)
-                if (!a.Exists(ra => rb.Id == ra.Id && rb.Name == ra.Name && rb.Relation == ra.Relation))
+            foreach (RecommendedAnime rb in b)
+                if (!a.Exists(ra => rb.Id == ra.Id && rb.Name == ra.Name && rb.Count == ra.Count))
                     return false;
 
             return true;
         }
     }
 
-    public class Recommendation
+    /*public class Recommendation
     {
         private string _author = "";
         public string Author
@@ -896,7 +1142,7 @@ namespace MyAnimeListInfo
             get { return _text; }
             set { _text = value; }
         }
-    }
+    }*/
 
     public enum UserStatus
     {
